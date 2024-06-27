@@ -46,12 +46,15 @@ export default function Header() {
                             </div>
                             <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                                 <div className="flex flex-shrink-0 items-center">
+                                    <h1 className="block h-8 w-auto sm:block lg:block">
+                                        Bill Buddy
+                                    </h1>
                                     <Image
                                         className="block h-8 w-auto sm:block lg:block"
-                                        src="/logo.svg"
-                                        width="24"
-                                        height="24"
-                                        alt="Celo Logo"
+                                        src="/BillBuddy.png"
+                                        width="120"
+                                        height="120"
+                                        alt="Bill Buddy logo"
                                     />
                                 </div>
                                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -60,6 +63,30 @@ export default function Header() {
                                         className="inline-flex items-center border-b-2 border-black px-1 pt-1 text-sm font-medium text-gray-900"
                                     >
                                         Home
+                                    </a>
+                                    <a
+                                        href="#"
+                                        className="inline-flex items-center border-b-2 border-black px-1 pt-1 text-sm font-medium text-gray-900"
+                                    >
+                                        Savings Groups
+                                    </a>
+                                    <a
+                                        href="#"
+                                        className="inline-flex items-center border-b-2 border-black px-1 pt-1 text-sm font-medium text-gray-900"
+                                    >
+                                        Reports
+                                    </a>
+                                    <a
+                                        href="#"
+                                        className="inline-flex items-center border-b-2 border-black px-1 pt-1 text-sm font-medium text-gray-900"
+                                    >
+                                        Donations
+                                    </a>
+                                    <a
+                                        href="#"
+                                        className="inline-flex items-center border-b-2 border-black px-1 pt-1 text-sm font-medium text-gray-900"
+                                    >
+                                        Shared Payments
                                     </a>
                                 </div>
                             </div>
@@ -93,7 +120,34 @@ export default function Header() {
                             >
                                 Home
                             </Disclosure.Button>
-                            {/* Add here your custom menu elements */}
+                            <Disclosure.Button
+                                as="a"
+                                href="#"
+                                className="block border-l-4 border-black py-2 pl-3 pr-4 text-base font-medium text-black"
+                            >
+                                Savings Groups
+                            </Disclosure.Button>
+                            <Disclosure.Button
+                                as="a"
+                                href="#"
+                                className="block border-l-4 border-black py-2 pl-3 pr-4 text-base font-medium text-black"
+                            >
+                                Reports
+                            </Disclosure.Button>
+                            <Disclosure.Button
+                                as="a"
+                                href="#"
+                                className="block border-l-4 border-black py-2 pl-3 pr-4 text-base font-medium text-black"
+                            >
+                                Donations
+                            </Disclosure.Button>
+                            <Disclosure.Button
+                                as="a"
+                                href="#"
+                                className="block border-l-4 border-black py-2 pl-3 pr-4 text-base font-medium text-black"
+                            >
+                                Shared Payments
+                            </Disclosure.Button>
                         </div>
                     </Disclosure.Panel>
                 </>

@@ -6,10 +6,10 @@
     "author": "Celo",
     "license": "MIT",
     "scripts": {
-        "react-app:dev": "yarn workspace @code/react-app dev",
-        "react-app:build": "yarn workspace @code/react-app build",
-        "react-app:start": "yarn workspace @code/react-app start",
-        "react-app:lint": "yarn workspace @code/react-app lint",
+        "dev": "yarn workspace @code/react-app dev",
+        "build": "yarn workspace @code/react-app build",
+        "start": "yarn workspace @code/react-app start",
+        "lint": "yarn workspace @code/react-app lint",
         "hardhat:test": "yarn workspace @code/hardhat test",
         "hardhat:test-local": "yarn workspace @code/hardhat test-local",
         "hardhat:create-account": "yarn workspace @code/hardhat create-account",
@@ -34,5 +34,8 @@
     "keywords": [
         "celo-composer",
         "celo"
-    ]
+    ],
+    "dependencies": {
+        "@heroicons/react": "^2.1.4"
+    }
 }

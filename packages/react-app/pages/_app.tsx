@@ -1,4 +1,4 @@
-import { Celo } from "@celo/rainbowkit-celo/chains";
+import { Celo , Alfajores } from "@celo/rainbowkit-celo/chains";
 import celoGroups from "@celo/rainbowkit-celo/lists";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
@@ -11,7 +11,7 @@ import { Toaster } from "react-hot-toast";
 
 const projectId = process.env.NEXT_PUBLIC_WC_PROJECT_ID as string; // get one at https://cloud.walletconnect.com/app
 console.log("project id", projectId)
-const { chains, publicClient } = configureChains([Celo], [publicProvider()]);
+const { chains, publicClient } = configureChains([Alfajores], [publicProvider()]);
 
 const connectors = celoGroups({
     chains,
