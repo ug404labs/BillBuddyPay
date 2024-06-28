@@ -12,8 +12,8 @@ contract BillBuddyPay {
         string description;
         address[] recipients;
         uint256[] shares;
-        uint256 totalReceived;
-        bool isSettled;
+        uint256 totalAmount;
+        uint256 paidAmount;
     }
 
     struct Expense {
@@ -23,7 +23,8 @@ contract BillBuddyPay {
         address[] payers;
         uint256[] shares;
         uint256 totalAmount;
-        bool isPaid;
+        uint256 paidAmount;
+        address receiver;
     }
 
     mapping(uint256 => Payment) public payments;
@@ -35,80 +36,110 @@ contract BillBuddyPay {
     mapping(address => uint256[]) public userExpenses;
 
     event PaymentCreated(uint256 indexed id, string name);
-    event PaymentReceived(uint256 indexed id, uint256 amount);
     event ExpenseCreated(uint256 indexed id, string name);
-    event ExpensePaid(uint256 indexed id);
+    event PaymentContributed(uint256 indexed id, uint256 amount);
+    event ExpenseContributed(uint256 indexed id, uint256 amount);
+    event TransactionSettled(uint256 indexed id, bool isExpense);
 
     constructor(address _usdcTokenAddress) {
         usdcToken = IERC20(_usdcTokenAddress);
     }
 
-    function createPayment(string memory _name, string memory _description, address[] memory _recipients, uint256[] memory _shares) public {
+    function createPayment(
+        string memory _name,
+        string memory _description,
+        address[] memory _recipients,
+        uint256[] memory _shares,
+        uint256 _totalAmount
+    ) public {
         require(_recipients.length == _shares.length, "Recipients and shares must have the same length");
-        
+        require(_totalAmount > 0, "Total amount must be greater than 0");
+
         paymentCount++;
-        payments[paymentCount] = Payment(paymentCount, _name, _description, _recipients, _shares, 0, false);
-        
-        for (uint i = 0; i < _recipients.length; i++) {
+        payments[paymentCount] = Payment(
+            paymentCount, _name, _description, _recipients, _shares, _totalAmount, 0
+        );
+
+        for (uint256 i = 0; i < _recipients.length; i++) {
             userPayments[_recipients[i]].push(paymentCount);
         }
-        
+
         emit PaymentCreated(paymentCount, _name);
     }
 
-    function receivePayment(uint256 _paymentId, uint256 _amount) public {
-        Payment storage payment = payments[_paymentId];
-        require(payment.id != 0, "Payment does not exist");
-
-        require(usdcToken.transferFrom(msg.sender, address(this), _amount), "Transfer failed");
-
-        payment.totalReceived += _amount;
-
-        for (uint256 i = 0; i < payment.recipients.length; i++) {
-            uint256 amount = (_amount * payment.shares[i]) / 100;
-            require(usdcToken.transfer(payment.recipients[i], amount), "Transfer failed");
-        }
-
-        if (payment.totalReceived >= getTotalShares(payment.shares)) {
-            payment.isSettled = true;
-        }
-
-        emit PaymentReceived(_paymentId, _amount);
-    }
-
-    function createExpense(string memory _name, string memory _description, address[] memory _payers, uint256[] memory _shares, uint256 _totalAmount) public {
+    function createExpense(
+        string memory _name,
+        string memory _description,
+        address[] memory _payers,
+        uint256[] memory _shares,
+        uint256 _totalAmount,
+        address _receiver
+    ) public {
         require(_payers.length == _shares.length, "Payers and shares must have the same length");
-        
+        require(_totalAmount > 0, "Total amount must be greater than 0");
+
         expenseCount++;
-        expenses[expenseCount] = Expense(expenseCount, _name, _description, _payers, _shares, _totalAmount, false);
-        
-        for (uint i = 0; i < _payers.length; i++) {
+        expenses[expenseCount] = Expense(
+            expenseCount, _name, _description, _payers, _shares, _totalAmount, 0, _receiver
+        );
+
+        for (uint256 i = 0; i < _payers.length; i++) {
             userExpenses[_payers[i]].push(expenseCount);
         }
-        
+
         emit ExpenseCreated(expenseCount, _name);
     }
 
-    function payExpense(uint256 _expenseId) public {
+    function contributeToPayment(uint256 _paymentId, uint256 _amount) public {
+        Payment storage payment = payments[_paymentId];
+        require(payment.id != 0, "Payment does not exist");
+        require(payment.paidAmount < payment.totalAmount, "Payment is already settled");
+
+        require(usdcToken.transferFrom(msg.sender, address(this), _amount), "Transfer failed");
+        payment.paidAmount += _amount;
+
+        emit PaymentContributed(_paymentId, _amount);
+
+        if (payment.paidAmount >= payment.totalAmount) {
+            settlePayment(_paymentId);
+        }
+    }
+
+    function contributeToExpense(uint256 _expenseId, uint256 _amount) public {
         Expense storage expense = expenses[_expenseId];
         require(expense.id != 0, "Expense does not exist");
-        require(!expense.isPaid, "Expense is already paid");
+        require(expense.paidAmount < expense.totalAmount, "Expense is already settled");
 
-        uint256 payerShare = 0;
-        for (uint256 i = 0; i < expense.payers.length; i++) {
-            if (msg.sender == expense.payers[i]) {
-                payerShare = (expense.totalAmount * expense.shares[i]) / 100;
-                break;
-            }
+        require(usdcToken.transferFrom(msg.sender, address(this), _amount), "Transfer failed");
+        expense.paidAmount += _amount;
+
+        emit ExpenseContributed(_expenseId, _amount);
+
+        if (expense.paidAmount >= expense.totalAmount) {
+            settleExpense(_expenseId);
         }
-        require(payerShare > 0, "Not a valid payer for this expense");
+    }
 
-        require(usdcToken.transferFrom(msg.sender, address(this), payerShare), "Transfer failed");
+    function settlePayment(uint256 _paymentId) private {
+        Payment storage payment = payments[_paymentId];
+        require(payment.paidAmount >= payment.totalAmount, "Payment is not fully paid");
 
-        if (usdcToken.balanceOf(address(this)) >= expense.totalAmount) {
-            expense.isPaid = true;
-            emit ExpensePaid(_expenseId);
+        uint256 totalShares = getTotalShares(payment.shares);
+        for (uint256 i = 0; i < payment.recipients.length; i++) {
+            uint256 amount = (payment.totalAmount * payment.shares[i]) / totalShares;
+            require(usdcToken.transfer(payment.recipients[i], amount), "Transfer to recipient failed");
         }
+
+        emit TransactionSettled(_paymentId, false);
+    }
+
+    function settleExpense(uint256 _expenseId) private {
+        Expense storage expense = expenses[_expenseId];
+        require(expense.paidAmount >= expense.totalAmount, "Expense is not fully paid");
+
+        require(usdcToken.transfer(expense.receiver, expense.totalAmount), "Transfer to receiver failed");
+
+        emit TransactionSettled(_expenseId, true);
     }
 
     function getUserPayments(address _user) public view returns (uint256[] memory) {

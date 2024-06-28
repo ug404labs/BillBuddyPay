@@ -1,5 +1,4 @@
 import { useState } from "react";
-import BillBuddyPayABI from "../abis/BillBuddyPay.abi.json";
 import {
     createPublicClient,
     createWalletClient,
@@ -10,13 +9,14 @@ import {
     formatUnits,
 } from "viem";
 import { celoAlfajores } from "viem/chains";
+import BillBuddyABI from "../abis/BillBuddy.abi.json"; // Corrected import path
 
 const publicClient = createPublicClient({
     chain: celoAlfajores,
     transport: http(),
 });
 
-const BILLBUDDY_PAY_CONTRACT = process.env.REACT_APP_BILLBUDDY_PAY_CONTRACT ?? "0x988784dca23bD96718353C5d4c965346eb8963dF";
+const BILLBUDDY_PAY_CONTRACT = process.env.REACT_APP_BILLBUDDY_PAY_CONTRACT ?? "0x19Bb51d383186369B5122B72a196A57C63f2c2bD";
 const cUSDTokenAddress = process.env.REACT_APP_CUSD_TOKEN_ADDRESS ?? "0x874069fa1eb16d44d622f2e0ca25eea172369bc1"; // Testnet
 console.log("Contract bill Address", BILLBUDDY_PAY_CONTRACT);
 
@@ -33,14 +33,20 @@ interface BillBuddyHook {
     address: string | null;
     getUserAddress: () => Promise<void>;
     createSharedTransaction: (name: string, description: string, participants: string[], shares: number[], totalAmount: string, receiver: string, isExpense: boolean) => Promise<any>;
-    contributeToTransaction: (transactionId: number, amount: string) => Promise<any>;
+    contributeToTransaction: (transactionId: number, amount: string, isExpense: boolean) => Promise<any>;
     getUserTransactions: (userAddress: string) => Promise<SharedTransaction[]>;
 }
 
 interface ContractSharedTransaction {
+    id: bigint;
     name: string;
     description: string;
     totalAmount: bigint;
+    paidAmount: bigint;
+    receiver?: string;
+    payers?: string[];
+    shares?: bigint[];
+    recipients?: string[];
     isSettled: boolean;
     isExpense: boolean;
 }
@@ -61,91 +67,98 @@ export const useBillBuddy = (): BillBuddyHook => {
     };
 
     const createSharedTransaction = async (name: string, description: string, participants: string[], shares: number[], totalAmount: string, receiver: string, isExpense: boolean) => {
-        let walletClient = createWalletClient({
-            transport: custom(window.ethereum),
-            chain: celoAlfajores,
-        });
+        try {
+            let walletClient = createWalletClient({
+                transport: custom(window.ethereum),
+                chain: celoAlfajores,
+            });
 
-        let [address] = await walletClient.getAddresses();
+            let [address] = await walletClient.getAddresses();
+            const totalAmountInSmallestUnit = parseUnits(totalAmount, 6);
+            const functionName = isExpense ? "createExpense" : "createPayment";
 
-        const totalAmountInSmallestUnit = parseUnits(totalAmount, 6);
+            const tx = await walletClient.writeContract({
+                address: BILLBUDDY_PAY_CONTRACT,
+                abi: BillBuddyABI,
+                functionName,
+                account: address,
+                args: isExpense ? [name, description, participants, shares, totalAmountInSmallestUnit, receiver] : [name, description, participants, shares, totalAmountInSmallestUnit],
+            });
 
-        const tx = await walletClient.writeContract({
-            address: BILLBUDDY_PAY_CONTRACT,
-            abi: BillBuddyPayABI,
-            functionName: "createSharedTransaction",
-            account: address,
-            args: [name, description, participants, shares, totalAmountInSmallestUnit, receiver, isExpense],
-        });
-
-        let receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
-        return receipt;
+            let receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+            return receipt;
+        } catch (error) {
+            console.error("Error creating shared transaction:", error);
+        }
     };
 
-    const contributeToTransaction = async (transactionId: number, amount: string) => {
-        let walletClient = createWalletClient({
-            transport: custom(window.ethereum),
-            chain: celoAlfajores,
-        });
+    const contributeToTransaction = async (transactionId: number, amount: string, isExpense: boolean) => {
+        try {
+            let walletClient = createWalletClient({
+                transport: custom(window.ethereum),
+                chain: celoAlfajores,
+            });
 
-        let [address] = await walletClient.getAddresses();
+            let [address] = await walletClient.getAddresses();
+            const amountInSmallestUnit = parseUnits(amount, 6);
+            const functionName = isExpense ? "contributeToExpense" : "contributeToPayment";
 
-        const amountInSmallestUnit = parseUnits(amount, 6);
+            const tx = await walletClient.writeContract({
+                address: BILLBUDDY_PAY_CONTRACT,
+                abi: BillBuddyABI,
+                functionName,
+                account: address,
+                args: [transactionId, amountInSmallestUnit],
+            });
 
-        const tx = await walletClient.writeContract({
-            address: BILLBUDDY_PAY_CONTRACT,
-            abi: BillBuddyPayABI,
-            functionName: "contributeToTransaction",
-            account: address,
-            args: [transactionId],
-            value: amountInSmallestUnit,
-        });
-
-        let receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
-        return receipt;
+            let receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+            return receipt;
+        } catch (error) {
+            console.error("Error contributing to transaction:", error);
+        }
     };
 
     const getUserTransactions = async (userAddress: string): Promise<SharedTransaction[]> => {
-        const billBuddyContract = getContract({
-            address: BILLBUDDY_PAY_CONTRACT,
-            abi: BillBuddyPayABI,
-            publicClient,
-        });
-
-        let transactionIds: bigint[];
         try {
-            transactionIds = await billBuddyContract.read.getUserTransactions([userAddress]) as bigint[];
-        } catch (error) {
-            console.error("Error fetching user transactions:", error);
-            return [];
-        }
+            const billBuddyContract = getContract({
+                address: BILLBUDDY_PAY_CONTRACT,
+                abi: BillBuddyABI,
+                publicClient,
+            });
 
-        const transactions = await Promise.all(transactionIds.map(async (id: bigint) => {
-            try {
-                const transaction = await billBuddyContract.read.sharedTransactions([id]) as ContractSharedTransaction;
+            const expenseIds = await billBuddyContract.read.getUserExpenses([userAddress]) as bigint[];
+            const paymentIds = await billBuddyContract.read.getUserPayments([userAddress]) as bigint[];
 
-                if (!transaction) {
-                    throw new Error(`Transaction with id ${id} is undefined`);
-                }
-
-                // Ensure totalAmount is a valid number, defaulting to 0 if undefined
-                const totalAmount = transaction.totalAmount ? transaction.totalAmount : BigInt(0);
-
+            const expensePromises = expenseIds.map(async (id: bigint) => {
+                const transaction = await billBuddyContract.read.getExpenseDetails([id]) as ContractSharedTransaction;
                 return {
                     id: Number(id),
                     name: transaction.name,
                     description: transaction.description,
-                    amount: formatUnits(totalAmount, 6),
-                    isSettled: transaction.isSettled,
-                    isExpense: transaction.isExpense,
+                    amount: formatUnits(transaction.totalAmount, 6),
+                    isSettled: transaction.paidAmount >= transaction.totalAmount,
+                    isExpense: true,
                 };
-            } catch (error) {
-                console.error(`Error fetching transaction with id ${id}:`, error);
-                return null;
-            }
-        }));
+            });
 
-        return transactions.filter(transaction => transaction !== null) as SharedTransaction[];
+            const paymentPromises = paymentIds.map(async (id: bigint) => {
+                const transaction = await billBuddyContract.read.getPaymentDetails([id]) as ContractSharedTransaction;
+                return {
+                    id: Number(id),
+                    name: transaction.name,
+                    description: transaction.description,
+                    amount: formatUnits(transaction.totalAmount, 6),
+                    isSettled: transaction.paidAmount >= transaction.totalAmount,
+                    isExpense: false,
+                };
+            });
+
+            const transactions = await Promise.all([...expensePromises, ...paymentPromises]);
+            return transactions.filter(transaction => transaction !== null) as SharedTransaction[];
+        } catch (error) {
+            console.error("Error fetching user transactions:", error);
+            return [];
+        }
     };
 
     return {
