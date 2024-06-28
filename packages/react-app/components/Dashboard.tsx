@@ -11,12 +11,29 @@ interface Action {
 
 const actions: Action[] = [
     {
-        name: 'Create Expense',
-        description: 'Add a new expense',
+        name: 'Create  Shared Expense',
+        description: 'Add a new  shared expense',
         icon: <PlusIcon className="h-6 w-6 text-white" />,
         action: 'createExpense'
     },
-    // Other actions...
+    {
+        name: 'Create Shared Payment',
+        description: 'Generate a payment link',
+        icon: <PlusIcon className="h-6 w-6 text-white" />,
+        action: 'createPayment'
+    },
+    {
+        name: 'Sacco',
+        description: 'Manage Sacco Data',
+        icon: <CurrencyDollarIcon className="h-6 w-6 text-white" />,
+        action: () => {}
+    },
+    {
+        name: 'My Reports',
+        description: 'My Reports',
+        icon: <CurrencyDollarIcon className="h-6 w-6 text-white" />,
+        action: () => {}
+    },
 ];
 
 export default function Dashboard() {
