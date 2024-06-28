@@ -16,42 +16,7 @@ const actions: Action[] = [
         icon: <PlusIcon className="h-6 w-6 text-white" />,
         action: 'createExpense'
     },
-    {
-        name: 'Payment Link',
-        description: 'Generate a payment link',
-        icon: <CreditCardIcon className="h-6 w-6 text-white" />,
-        action: () => {}
-    },
-    {
-        name: 'Donations',
-        description: 'Add a donation',
-        icon: <CurrencyDollarIcon className="h-6 w-6 text-white" />,
-        action: () => {}
-    },
-    {
-        name: 'Pay Expenses',
-        description: 'Settle your expenses',
-        icon: <CurrencyDollarIcon className="h-6 w-6 text-white" />,
-        action: () => {}
-    },
-    {
-        name: 'Donate',
-        description: 'Make a donation',
-        icon: <CurrencyDollarIcon className="h-6 w-6 text-white" />,
-        action: () => {}
-    },
-    {
-        name: 'Join Groups',
-        description: 'Join an existing group',
-        icon: <UserGroupIcon className="h-6 w-6 text-white" />,
-        action: () => {}
-    },
-    {
-        name: 'Create Group',
-        description: 'Create a new group',
-        icon: <PlusIcon className="h-6 w-6 text-white" />,
-        action: () => {}
-    },
+    // Other actions...
 ];
 
 export default function Dashboard() {

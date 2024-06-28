@@ -9,7 +9,6 @@ import Dashboard from "@/components/Dashboard";
 import CustomTab from "@/components/CustomTab";
 import MyModal from "@/components/Modal";
 import { Tab } from "@headlessui/react";
-import useWeb3 from "./api/functions";
 
 export const SPLITPAY_CONTRACT_ADDRESS =
     "0xb6f2469Df91A6D73DBC731c3bA385007f6c683d1";
@@ -38,8 +37,6 @@ export type Settlement = {
     settler: string;
 };
 
-
-
 export default function Home() {
     const [generalBalance, setGeneralBalance] = useState<null | string>("0");
     const [expenses, setExpenses] = useState<null | Expense[]>(null);
@@ -47,7 +44,6 @@ export default function Home() {
     const publicClient = usePublicClient();
     const { address, isConnected } = useAccount();
     const [isOpen, setIsOpen] = useState(false);
-    const {addExpense} = useWeb3()
     
     useEffect(() => {
         if (address) {
@@ -150,7 +146,7 @@ export default function Home() {
                     <Tab.Panel className="w-full pt-2 flex flex-col items-center h-full">
                         <p>Address: {address}</p>
                         <button
-                            onClick={() => addExpense()}
+                            onClick={() => setIsOpen(true)}
                             className="border bg-green-500 border-green-700 px-2 py-2 text-white"
                         >
                             Add Expense
