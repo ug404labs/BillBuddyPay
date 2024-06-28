@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
-import { useBillBuddy, Payment, Expense } from "../hooks/useBillBuddy";
+import { useBillBuddy, SharedTransaction } from "../hooks/useBillBuddy";
 
 export default function UserProfile() {
-    const [userPayments, setUserPayments] = useState<Payment[]>([]);
-    const [userExpenses, setUserExpenses] = useState<Expense[]>([]);
-    const [totalPayments, setTotalPayments] = useState<string>("0");
-    const [totalExpenses, setTotalExpenses] = useState<string>("0");
+    const [userTransactions, setUserTransactions] = useState<SharedTransaction[]>([]);
+    const [totalIncoming, setTotalIncoming] = useState<string>("0");
+    const [totalOutgoing, setTotalOutgoing] = useState<string>("0");
     const { address, isConnected } = useAccount();
     const billBuddy = useBillBuddy();
 
@@ -18,18 +17,18 @@ export default function UserProfile() {
   
     async function fetchUserData() {
         if (address) {
-            const payments = await billBuddy.getUserPayments(address);
-            const expenses = await billBuddy.getUserExpenses(address);
-            setUserPayments(payments);
-            setUserExpenses(expenses);
-            const paymentsTotal = payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
-            const expensesTotal = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
-            setTotalPayments(paymentsTotal.toFixed(2));
-            setTotalExpenses(expensesTotal.toFixed(2));
+            const transactions = await billBuddy.getUserTransactions(address);
+            setUserTransactions(transactions);
+            const incomingTotal = transactions
+                .filter(tx => !tx.isExpense)
+                .reduce((sum, tx) => sum + Number(tx.amount), 0);
+            const outgoingTotal = transactions
+                .filter(tx => tx.isExpense)
+                .reduce((sum, tx) => sum + Number(tx.amount), 0);
+            setTotalIncoming(incomingTotal.toFixed(2));
+            setTotalOutgoing(outgoingTotal.toFixed(2));
         }
     }
-
-    
 
     return (
         <div className="flex flex-col items-center p-4">
@@ -37,12 +36,12 @@ export default function UserProfile() {
             
             <div className="flex justify-between w-full max-w-2xl mb-8">
                 <div className="bg-green-100 p-4 rounded-lg shadow-md w-[48%]">
-                    <h2 className="text-lg font-semibold mb-2">Total Payments</h2>
-                    <p className="text-2xl font-bold text-green-600">${totalPayments}</p>
+                    <h2 className="text-lg font-semibold mb-2">Total Incoming</h2>
+                    <p className="text-2xl font-bold text-green-600">${totalIncoming}</p>
                 </div>
                 <div className="bg-red-100 p-4 rounded-lg shadow-md w-[48%]">
-                    <h2 className="text-lg font-semibold mb-2">Total Expenses</h2>
-                    <p className="text-2xl font-bold text-red-600">${totalExpenses}</p>
+                    <h2 className="text-lg font-semibold mb-2">Total Outgoing</h2>
+                    <p className="text-2xl font-bold text-red-600">${totalOutgoing}</p>
                 </div>
             </div>
 
@@ -52,20 +51,22 @@ export default function UserProfile() {
                     <thead>
                         <tr className="bg-gray-200">
                             <th className="p-2 text-left">Type</th>
+                            <th className="p-2 text-left">Name</th>
                             <th className="p-2 text-left">Description</th>
                             <th className="p-2 text-left">Amount</th>
                             <th className="p-2 text-left">Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {[...userPayments, ...userExpenses]
+                        {userTransactions
                             .sort((a, b) => Number(b.id) - Number(a.id))
                             .map((item, index) => (
-                                <tr key={index} className={item.type === 'payment' ? 'bg-green-50' : 'bg-red-50'}>
-                                    <td className="p-2">{item.type === 'payment' ? 'Payment' : 'Expense'}</td>
+                                <tr key={index} className={item.isExpense ? 'bg-red-50' : 'bg-green-50'}>
+                                    <td className="p-2">{item.isExpense ? 'Expense' : 'Payment'}</td>
+                                    <td className="p-2">{item.name}</td>
                                     <td className="p-2">{item.description}</td>
                                     <td className="p-2">${item.amount}</td>
-                                    <td className="p-2">{item.type === 'payment' ? (item.isSettled ? 'Settled' : 'Pending') : (item.isPaid ? 'Paid' : 'Unpaid')}</td>
+                                    <td className="p-2">{item.isSettled ? 'Settled' : 'Pending'}</td>
                                 </tr>
                             ))}
                     </tbody>
