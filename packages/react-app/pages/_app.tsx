@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useRouter } from "next/router";
+
 import { WagmiConfig, configureChains, createConfig } from "wagmi";
 import { publicProvider } from "wagmi/providers/public";
+import "../styles/globals.css";
 import Layout from "../components/Layout";
 import Dashboard from "@/components/Dashboard";
 import UserProfile from "../components/Profile";
@@ -11,6 +11,7 @@ import type { AppProps } from "next/app";
 import { Toaster } from "react-hot-toast";
 import { Celo, Alfajores } from "@celo/rainbowkit-celo/chains";
 import celoGroups from "@celo/rainbowkit-celo/lists";
+
 const projectId = process.env.NEXT_PUBLIC_WC_PROJECT_ID as string; // get one at https://cloud.walletconnect.com/app
 const { chains, publicClient } = configureChains([Alfajores], [publicProvider()]);
 
@@ -45,7 +46,7 @@ function App({
                 <Layout>
                     <Toaster />
                     <Component {...pageProps} />
-                    <Dashboard />
+                  
                     <UserProfile />
                 </Layout>
             </RainbowKitProvider>

@@ -16,9 +16,9 @@ const publicClient = createPublicClient({
     transport: http(),
 });
 
-const BILLBUDDY_PAY_CONTRACT = process.env.REACT_APP_BILLBUDDY_PAY_CONTRACT ?? "0x87C032C16D0E7d293CDbdEB7fd89d33D60fdD8E7";
+const BILLBUDDY_PAY_CONTRACT = process.env.REACT_APP_BILLBUDDY_PAY_CONTRACT ?? "0x304A0B32d25bc993d9a3196BC92BE3FFa4d8cb76";
 const cUSDTokenAddress = process.env.REACT_APP_CUSD_TOKEN_ADDRESS ?? "0x874069fa1eb16d44d622f2e0ca25eea172369bc1"; // Testnet
-
+console.log("Contract  bill Address", BILLBUDDY_PAY_CONTRACT);
 export interface Payment {
     id: number;
     name: string;
@@ -160,55 +160,93 @@ export const useBillBuddy = (): BillBuddyHook => {
         let receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
         return receipt;
     };
-
+    
     const getUserPayments = async (userAddress: string): Promise<Payment[]> => {
         const billBuddyContract = getContract({
             address: BILLBUDDY_PAY_CONTRACT,
             abi: BillBuddyPayABI,
             publicClient,
         });
-
-        const paymentIds = await billBuddyContract.read.getUserPayments([userAddress]) as bigint[];
-        
+    
+        let paymentIds: bigint[];
+        try {
+            paymentIds = await billBuddyContract.read.getUserPayments([userAddress]) as bigint[];
+        } catch (error) {
+            console.error("Error fetching user payments:", error);
+            return [];
+        }
+    
         const payments = await Promise.all(paymentIds.map(async (id: bigint) => {
-            const payment = await billBuddyContract.read.payments([id]) as ContractPayment;
-            return {
-                id: Number(id),
-                name: payment.name,
-                description: payment.description,
-                amount: formatUnits(payment.totalReceived, 6),
-                isSettled: payment.isSettled,
-                type: 'payment' as const,
-            };
+            try {
+                const payment = await billBuddyContract.read.payments([id]) as ContractPayment;
+    
+                if (!payment) {
+                    throw new Error(`Payment with id ${id} is undefined`);
+                }
+    
+                // Ensure totalReceived is a valid number, defaulting to 0 if undefined
+                const totalReceived = payment.totalReceived ? payment.totalReceived : BigInt(0);
+    
+                return {
+                    id: Number(id),
+                    name: payment.name,
+                    description: payment.description,
+                    amount: formatUnits(totalReceived, 6),
+                    isSettled: payment.isSettled,
+                    type: 'payment' as const,
+                };
+            } catch (error) {
+                console.error(`Error fetching payment with id ${id}:`, error);
+                return null;
+            }
         }));
-
-        return payments;
+    
+        return payments.filter(payment => payment !== null) as Payment[];
     };
-
+    
     const getUserExpenses = async (userAddress: string): Promise<Expense[]> => {
         const billBuddyContract = getContract({
             address: BILLBUDDY_PAY_CONTRACT,
             abi: BillBuddyPayABI,
             publicClient,
         });
-
-        const expenseIds = await billBuddyContract.read.getUserExpenses([userAddress]) as bigint[];
-        
+    
+        let expenseIds: bigint[];
+        try {
+            expenseIds = await billBuddyContract.read.getUserExpenses([userAddress]) as bigint[];
+        } catch (error) {
+            console.error("Error fetching user expenses:", error);
+            return [];
+        }
+    
         const expenses = await Promise.all(expenseIds.map(async (id: bigint) => {
-            const expense = await billBuddyContract.read.expenses([id]) as ContractExpense;
-            return {
-                id: Number(id),
-                name: expense.name,
-                description: expense.description,
-                amount: formatUnits(expense.totalAmount, 6),
-                isPaid: expense.isPaid,
-                type: 'expense' as const,
-            };
+            try {
+                const expense = await billBuddyContract.read.expenses([id]) as ContractExpense;
+    
+                if (!expense) {
+                    throw new Error(`Expense with id ${id} is undefined`);
+                }
+    
+                // Ensure totalAmount is a valid number, defaulting to 0 if undefined
+                const totalAmount = expense.totalAmount ? expense.totalAmount : BigInt(0);
+    
+                return {
+                    id: Number(id),
+                    name: expense.name,
+                    description: expense.description,
+                    amount: formatUnits(totalAmount, 6),
+                    isPaid: expense.isPaid,
+                    type: 'expense' as const,
+                };
+            } catch (error) {
+                console.error(`Error fetching expense with id ${id}:`, error);
+                return null;
+            }
         }));
-
-        return expenses;
+    
+        return expenses.filter(expense => expense !== null) as Expense[];
     };
-
+    
     return {
         address,
         getUserAddress,

@@ -52,31 +52,14 @@ export default function Home() {
             })();
         }
     }, [address]);
-
+// {*/  /*}
     return (
         <div className="flex flex-col justify-center items-center">
             {generalBalance !== null && (
                 <EffectiveBalance balance={generalBalance} />
-            )}
-            <Dashboard />
-            <Tab.Group defaultIndex={0}>
-                <Tab.List className="mt-10 border border-green-700 w-screen grid grid-cols-2 max-w-[500px] bg-transparent">
-                    <CustomTab>Expenses</CustomTab>
-                    <CustomTab>Square it Up</CustomTab>
-                </Tab.List>
-                <Tab.Panels className="w-full h-full">
-                    <Tab.Panel className="w-full pt-2 flex flex-col items-center h-full">
-                        <p>Address: {address}</p>
-                        <button
-                            onClick={() => setIsOpen(true)}
-                            className="border bg-green-500 border-green-700 px-2 py-2 text-white"
-                        >
-                            Add Expense
-                        </button>
-                        <MyModal isOpen={isOpen} setIsOpen={setIsOpen} />
-                    </Tab.Panel>
-                </Tab.Panels>
-            </Tab.Group>
+            )} 
+            <Dashboard toggleUserProfile={() => {}} />
+          
         </div>
     );
 }
