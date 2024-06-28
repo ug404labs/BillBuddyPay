@@ -46,8 +46,6 @@ function App({
                 <Layout>
                     <Toaster />
                     <Component {...pageProps} />
-                  
-                    <UserProfile />
                 </Layout>
             </RainbowKitProvider>
         </WagmiConfig>

@@ -39,5 +39,8 @@
         "@heroicons/react": "^2.1.4",
         "@openzeppelin/contracts": "^5.0.2",
         "react-modal": "^3.16.1"
+    },
+    "devDependencies": {
+        "@types/react-modal": "^3.16.3"
     }
 }

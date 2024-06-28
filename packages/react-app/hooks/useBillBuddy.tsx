@@ -19,6 +19,7 @@ const publicClient = createPublicClient({
 const BILLBUDDY_PAY_CONTRACT = process.env.REACT_APP_BILLBUDDY_PAY_CONTRACT ?? "0x19Bb51d383186369B5122B72a196A57C63f2c2bD";
 const cUSDTokenAddress = process.env.REACT_APP_CUSD_TOKEN_ADDRESS ?? "0x874069fa1eb16d44d622f2e0ca25eea172369bc1"; // Testnet
 console.log("Contract bill Address", BILLBUDDY_PAY_CONTRACT);
+console.log("Contract cUSD Address", cUSDTokenAddress);
 
 export interface SharedTransaction {
     id: number;

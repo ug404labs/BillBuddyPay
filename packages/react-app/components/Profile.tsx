@@ -240,7 +240,7 @@ export default function UserProfile() {
                         className="bg-gray-500 text-white py-1 px-3 rounded"
                         onClick={() => handleViewDetails(item)}
                       >
-                        View Details
+                        View
                       </button>
                     )}
                   </td>

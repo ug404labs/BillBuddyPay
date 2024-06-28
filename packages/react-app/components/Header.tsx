@@ -65,16 +65,16 @@ export default function Header() {
                                         Home
                                     </a>
                                     <a
-                                        href="#"
+                                        href="/payments"
                                         className="inline-flex items-center border-b-2 border-black px-1 pt-1 text-sm font-medium text-gray-900"
                                     >
-                                        Savings Groups
+                                        Payments
                                     </a>
                                     <a
-                                        href="#"
+                                        href="/sacco"
                                         className="inline-flex items-center border-b-2 border-black px-1 pt-1 text-sm font-medium text-gray-900"
                                     >
-                                        Reports
+                                        Sacco
                                     </a>
                                     <a
                                         href="#"
