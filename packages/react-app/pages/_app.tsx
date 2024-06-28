@@ -1,16 +1,17 @@
-import { Celo , Alfajores } from "@celo/rainbowkit-celo/chains";
-import celoGroups from "@celo/rainbowkit-celo/lists";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import "@rainbow-me/rainbowkit/styles.css";
-import type { AppProps } from "next/app";
+import { useState } from "react";
+import { useRouter } from "next/router";
 import { WagmiConfig, configureChains, createConfig } from "wagmi";
 import { publicProvider } from "wagmi/providers/public";
 import Layout from "../components/Layout";
-import "../styles/globals.css";
+import Dashboard from "@/components/Dashboard";
+import UserProfile from "../components/Profile";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import "@rainbow-me/rainbowkit/styles.css";
+import type { AppProps } from "next/app";
 import { Toaster } from "react-hot-toast";
-
+import { Celo, Alfajores } from "@celo/rainbowkit-celo/chains";
+import celoGroups from "@celo/rainbowkit-celo/lists";
 const projectId = process.env.NEXT_PUBLIC_WC_PROJECT_ID as string; // get one at https://cloud.walletconnect.com/app
-console.log("project id", projectId)
 const { chains, publicClient } = configureChains([Alfajores], [publicProvider()]);
 
 const connectors = celoGroups({
@@ -23,15 +24,19 @@ const connectors = celoGroups({
 const appInfo = {
     appName: "Celo Composer",
 };
-
 const wagmiConfig = createConfig({
     connectors,
     publicClient: publicClient,
 });
 
-function App({ Component, pageProps }: AppProps) {
+function App({
+    Component,
+    pageProps,
+}: AppProps) {
     return (
-        <WagmiConfig config={wagmiConfig}>
+        <WagmiConfig
+            config={wagmiConfig}
+        >
             <RainbowKitProvider
                 chains={chains}
                 appInfo={appInfo}
@@ -40,10 +45,11 @@ function App({ Component, pageProps }: AppProps) {
                 <Layout>
                     <Toaster />
                     <Component {...pageProps} />
+                    <Dashboard />
+                    <UserProfile />
                 </Layout>
             </RainbowKitProvider>
         </WagmiConfig>
     );
 }
-
-export default App;
+export default App

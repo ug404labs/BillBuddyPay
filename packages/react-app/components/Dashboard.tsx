@@ -9,10 +9,14 @@ interface Action {
     action: string | (() => void);
 }
 
+interface DashboardProps {
+    toggleUserProfile: () => void; // Function to toggle to user profile
+}
+
 const actions: Action[] = [
     {
-        name: 'Create  Shared Expense',
-        description: 'Add a new  shared expense',
+        name: 'Create Shared Expense',
+        description: 'Add a new shared expense',
         icon: <PlusIcon className="h-6 w-6 text-white" />,
         action: 'createExpense'
     },
@@ -29,14 +33,14 @@ const actions: Action[] = [
         action: () => {}
     },
     {
-        name: 'My Reports',
-        description: 'My Reports',
+        name: 'My Transactions',
+        description: 'Report and More',
         icon: <CurrencyDollarIcon className="h-6 w-6 text-white" />,
-        action: () => {}
+        action: 'profile'
     },
 ];
 
-export default function Dashboard() {
+const Dashboard: React.FC<DashboardProps> = ({ toggleUserProfile }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const handleAction = (actionName: string | (() => void)) => {
@@ -44,7 +48,10 @@ export default function Dashboard() {
             setIsOpen(true); // Open the expense modal
         } else if (typeof actionName === 'function') {
             actionName(); // Call the action function if provided
+        } else if (actionName === 'profile') {
+            toggleUserProfile(); // Toggle to user profile
         }
+        
         // Add handling for other actions as needed
     };
 
@@ -74,3 +81,5 @@ export default function Dashboard() {
         </div>
     );
 }
+
+export default Dashboard;

@@ -6,11 +6,12 @@ import {
     usePublicClient,
     useWalletClient,
 } from "wagmi";
-import SplitPayAbi from "../abis/SplitPay";
-import { SPLITPAY_CONTRACT_ADDRESS } from "@/pages";
+import BillBuddyPayABI from "../abis/BillBuddyPay.abi.json";
 import { parseUnits } from "viem";
 import toast from "react-hot-toast";
 import { LookupResponse } from "@/pages/api/socialconnect/lookup";
+
+export const BILLBUDDY_ADDRESS = process.env.REACT_APP_BILLBUDDY_ADDRESS as string;
 
 type ModalProps = {
     isOpen: boolean;
@@ -62,8 +63,8 @@ export default function MyModal({ isOpen, setIsOpen }: ModalProps) {
             });
             try {
                 let hash = await walletClient.writeContract({
-                    abi: SplitPayAbi,
-                    address: SPLITPAY_CONTRACT_ADDRESS,
+                    abi: BillBuddyPayABI,
+                    address: BILLBUDDY_ADDRESS,
                     functionName: "createExpense",
                     chain,
                     args: [

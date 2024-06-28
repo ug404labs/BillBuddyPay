@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAccount, usePublicClient } from "wagmi";
 import { ethers } from "ethers";
+import BillBuddyPayABI from "../abis/BillBuddyPay.abi.json";
 import EffectiveBalance from "@/components/EffectiveBalance";
-import SplitPayAbi from "../abis/SplitPay";
 import Expenses from "@/components/Expenses";
 import Settlements from "@/components/Settlements";
 import Dashboard from "@/components/Dashboard";
@@ -10,8 +10,7 @@ import CustomTab from "@/components/CustomTab";
 import MyModal from "@/components/Modal";
 import { Tab } from "@headlessui/react";
 
-export const SPLITPAY_CONTRACT_ADDRESS =
-    "0xb6f2469Df91A6D73DBC731c3bA385007f6c683d1";
+export const REACT_APP_BILLBUDDY_ADDRESS = process.env.REACT_APP_BILLBUDDY_ADDRESS as string;
 
 export type UserStats = {
     effectiveBalance: bigint;
@@ -38,98 +37,21 @@ export type Settlement = {
 };
 
 export default function Home() {
-    const [generalBalance, setGeneralBalance] = useState<null | string>("0");
-    const [expenses, setExpenses] = useState<null | Expense[]>(null);
-    const [settlements, setSettlements] = useState<null | Settlement[]>(null);
-    const publicClient = usePublicClient();
+    const [generalBalance, setGeneralBalance] = useState<string>("0");
     const { address, isConnected } = useAccount();
     const [isOpen, setIsOpen] = useState(false);
-    
+
     useEffect(() => {
         if (address) {
             (async () => {
                 console.log("Fetching general balance for address:", address);
-
                 let provider = new ethers.providers.Web3Provider(window.ethereum);
-
                 let balance = await provider.getBalance(address);
                 console.log("General Balance:", ethers.utils.formatEther(balance));
                 setGeneralBalance(ethers.utils.formatEther(balance));
-
-                let splitPayContract = new ethers.Contract(
-                    SPLITPAY_CONTRACT_ADDRESS,
-                    SplitPayAbi,
-                    provider
-                );
-
-                let { expenses, settlements } = await splitPayContract.getUserStats(address);
-                
-                console.log("Expenses:", expenses);
-                console.log("Settlements:", settlements);
-
-                let _expenses = [];
-
-                for (let i = 0; i < expenses.length; i++) {
-                    let _expense = (await getExpenseFromExpenseId(expenses[i])) as Expense;
-
-                    _expense.id = expenses[i];
-                    console.log("Fetched Expense:", _expense);
-
-                    _expenses.push(_expense);
-                }
-
-                setExpenses(_expenses);
-
-                let _settlements = [];
-
-                for (let i = 0; i < settlements.length; i++) {
-                    let _settlement = (await getSettlementFromSettlementId(settlements[i])) as Settlement;
-
-                    let _expense = (await getExpenseFromExpenseId(Number(_settlement.expenseId))) as Expense;
-
-                    _settlement.id = settlements[i];
-
-                    _settlement.expense = _expense;
-                    console.log("Fetched Settlement:", _settlement);
-
-                    _settlements.push(_settlement);
-                }
-
-                setSettlements(_settlements);
             })();
         }
-
-        return () => {
-            console.log("Cleaning up...");
-            setExpenses(null);
-            setSettlements(null);
-            setGeneralBalance("0");
-        };
     }, [address]);
-
-    async function getExpenseFromExpenseId(expenseId: number) {
-        console.log("Fetching Expense with ID:", expenseId);
-        const expense = await publicClient.readContract({
-            abi: SplitPayAbi,
-            address: SPLITPAY_CONTRACT_ADDRESS,
-            functionName: "getExpense",
-            args: [expenseId],
-        });
-        console.log("Fetched Expense:", expense);
-        return expense;
-    }
-
-    async function getSettlementFromSettlementId(settlementId: number) {
-        console.log("Fetching Settlement with ID:", settlementId);
-        const settlement = await publicClient.readContract({
-            abi: SplitPayAbi,
-            address: SPLITPAY_CONTRACT_ADDRESS,
-            functionName: "getSettlement",
-            args: [settlementId],
-        });
-        console.log("Fetched Settlement:", settlement);
-        return settlement;
-    }
 
     return (
         <div className="flex flex-col justify-center items-center">
@@ -151,14 +73,7 @@ export default function Home() {
                         >
                             Add Expense
                         </button>
-    
                         <MyModal isOpen={isOpen} setIsOpen={setIsOpen} />
-                        <div className="mt-2 w-full">
-                            {expenses && <Expenses expenses={expenses} />}
-                        </div>
-                    </Tab.Panel>
-                    <Tab.Panel>
-                        <Settlements settlements={settlements} />
                     </Tab.Panel>
                 </Tab.Panels>
             </Tab.Group>
