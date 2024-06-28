@@ -1,22 +1,17 @@
-import CustomTab from "@/components/CustomTab";
-import Expense from "@/components/Expense";
-import MyModal from "@/components/Modal";
-import { Tab } from "@headlessui/react";
 import { useEffect, useState } from "react";
 import { useAccount, usePublicClient } from "wagmi";
-import SplitPayAbi from "../abis/SplitPay";
-import { formatEther, getContract } from "viem";
+import { ethers } from "ethers";
 import EffectiveBalance from "@/components/EffectiveBalance";
+import SplitPayAbi from "../abis/SplitPay";
 import Expenses from "@/components/Expenses";
 import Settlements from "@/components/Settlements";
-import { ethers } from "ethers";
+import Dashboard from "@/components/Dashboard";
+import CustomTab from "@/components/CustomTab";
+import MyModal from "@/components/Modal";
+import { Tab } from "@headlessui/react";
 
 export const SPLITPAY_CONTRACT_ADDRESS =
-    "0x36Eef317F736FC5d7D0CAAe80a1bD7aD1D93B874";
-
-// TESTNET
-// export const SPLITPAY_CONTRACT_ADDRESS =
-//     "0xb6f2469Df91A6D73DBC731c3bA385007f6c683d1";
+    "0xb6f2469Df91A6D73DBC731c3bA385007f6c683d1";
 
 export type UserStats = {
     effectiveBalance: bigint;
@@ -43,29 +38,23 @@ export type Settlement = {
 };
 
 export default function Home() {
-    const [effectiveUserBalance, setEffectiveUserBalance] = useState<
-        null | string
-    >("0");
+    const [generalBalance, setGeneralBalance] = useState<null | string>("0");
     const [expenses, setExpenses] = useState<null | Expense[]>(null);
     const [settlements, setSettlements] = useState<null | Settlement[]>(null);
     const publicClient = usePublicClient();
     const { address, isConnected } = useAccount();
     const [isOpen, setIsOpen] = useState(false);
     
-
     useEffect(() => {
         if (address) {
             (async () => {
-                console.log("Fetching user stats for address:", address);
-                // let splitPayContract = getContract({
-                //     abi: SplitPayAbi,
-                //     address: SPLITPAY_CONTRACT_ADDRESS,
-                //     publicClient,
-                // });
+                console.log("Fetching general balance for address:", address);
 
-                let provider = new ethers.providers.Web3Provider(
-                    window.ethereum
-                );
+                let provider = new ethers.providers.Web3Provider(window.ethereum);
+
+                let balance = await provider.getBalance(address);
+                console.log("General Balance:", ethers.utils.formatEther(balance));
+                setGeneralBalance(ethers.utils.formatEther(balance));
 
                 let splitPayContract = new ethers.Contract(
                     SPLITPAY_CONTRACT_ADDRESS,
@@ -73,26 +62,15 @@ export default function Home() {
                     provider
                 );
 
-                let { effectiveBalance, expenses, settlements } =
-                    await splitPayContract.getUserStats(address);
-
-                // let { effectiveBalance, expenses, settlements } =
-                //     (await splitPayContract.read.getUserStats([
-                //         address,
-                //     ])) as UserStats;
-                console.log("address", address);
-                console.log("Effective Balance:", effectiveBalance.toString());
+                let { expenses, settlements } = await splitPayContract.getUserStats(address);
+                
                 console.log("Expenses:", expenses);
                 console.log("Settlements:", settlements);
-
-                setEffectiveUserBalance(formatEther(effectiveBalance));
 
                 let _expenses = [];
 
                 for (let i = 0; i < expenses.length; i++) {
-                    let _expense = (await getExpenseFromExpenseId(
-                        expenses[i]
-                    )) as Expense;
+                    let _expense = (await getExpenseFromExpenseId(expenses[i])) as Expense;
 
                     _expense.id = expenses[i];
                     console.log("Fetched Expense:", _expense);
@@ -105,13 +83,9 @@ export default function Home() {
                 let _settlements = [];
 
                 for (let i = 0; i < settlements.length; i++) {
-                    let _settlement = (await getSettlementFromSettlementId(
-                        settlements[i]
-                    )) as Settlement;
+                    let _settlement = (await getSettlementFromSettlementId(settlements[i])) as Settlement;
 
-                    let _expense = (await getExpenseFromExpenseId(
-                        Number(_settlement.expenseId)
-                    )) as Expense;
+                    let _expense = (await getExpenseFromExpenseId(Number(_settlement.expenseId))) as Expense;
 
                     _settlement.id = settlements[i];
 
@@ -129,7 +103,7 @@ export default function Home() {
             console.log("Cleaning up...");
             setExpenses(null);
             setSettlements(null);
-            setEffectiveUserBalance("0");
+            setGeneralBalance("0");
         };
     }, [address]);
 
@@ -159,9 +133,10 @@ export default function Home() {
 
     return (
         <div className="flex flex-col justify-center items-center">
-            {effectiveUserBalance !== null && (
-                <EffectiveBalance balance={effectiveUserBalance} />
+            {generalBalance !== null && (
+                <EffectiveBalance balance={generalBalance} />
             )}
+            <Dashboard />
             <Tab.Group defaultIndex={0}>
                 <Tab.List className="mt-10 border border-green-700 w-screen grid grid-cols-2 max-w-[500px] bg-transparent">
                     <CustomTab>Expenses</CustomTab>
