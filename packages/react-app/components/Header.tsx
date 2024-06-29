@@ -129,7 +129,7 @@ export default function Header() {
                             </Disclosure.Button>
                             <Disclosure.Button
                                 as="a"
-                                href="/saccos"
+                                href="/sacco"
                                 className="block border-l-4 border-black py-2 pl-3 pr-4 text-base font-medium text-black"
                             >
                                 Saccos
