@@ -1,4 +1,4 @@
-Here's the updated README.md with detailed information about BillBuddy, including its sacco functionality and shared expenses:
+
 
 ```markdown
 <a name="readme-top"></a>
