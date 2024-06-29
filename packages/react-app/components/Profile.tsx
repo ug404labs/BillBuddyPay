@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useProvider } from "wagmi";
+import { ethers } from "ethers";
 import { useBillBuddy, SharedTransaction } from "../hooks/useBillBuddy";
 
 function CreateTransactionModal({ isOpen, onClose, createTransaction }) {
@@ -130,8 +131,11 @@ export default function UserProfile() {
   const [userTransactions, setUserTransactions] = useState([]);
   const [totalIncoming, setTotalIncoming] = useState("0");
   const [totalOutgoing, setTotalOutgoing] = useState("0");
-  const { address, isConnected } = useAccount();
+  const [generalBalance, setGeneralBalance] = useState<string>("0");
+  const provider = useProvider();
   const billBuddy = useBillBuddy();
+  const { address, isConnected } = useAccount();
+
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -139,25 +143,34 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (address) {
-      billBuddy.getUserAddress();
-      fetchUserData();
+      (async () => {
+        await billBuddy.getUserAddress();
+        await fetchUserData();
+        console.log("Fetching general balance for address:", address);
+        let balance = await provider.getBalance(address);
+        console.log("General Balance:", ethers.utils.formatEther(balance));
+        setGeneralBalance(ethers.utils.formatEther(balance));
+      })();
     }
-  }, [address, billBuddy]);
+  }, [address, billBuddy, provider]);
 
   const fetchUserData = async () => {
     if (address) {
-      const transactions = await billBuddy.getUserTransactions(address);
-      setUserTransactions(transactions);
-      const incomingTotal = transactions
-        .filter(tx => !tx.isExpense)
-        .reduce((sum, tx) => sum + Number(tx.amount), 0);
-      const outgoingTotal = transactions
-        .filter(tx => tx.isExpense)
-        .reduce((sum, tx) => sum + Number(tx.amount), 0);
-      setTotalIncoming(incomingTotal.toFixed(2));
-      setTotalOutgoing(outgoingTotal.toFixed(2));
+      try {
+        const transactions = await billBuddy.getUserTransactions(address);
+        setUserTransactions(transactions);
+        const incomingTotal = transactions
+          .filter(tx => !tx.isExpense)
+          .reduce((sum, tx) => sum + Number(tx.amount), 0);
+        const outgoingTotal = transactions
+          .filter(tx => tx.isExpense)
+          .reduce((sum, tx) => sum + Number(tx.amount), 0);
+        setTotalIncoming(incomingTotal.toFixed(2));
+        setTotalOutgoing(outgoingTotal.toFixed(2));
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
     }
-  };
 
   const handleViewDetails = (transaction) => {
     setSelectedTransaction(transaction);
@@ -184,8 +197,10 @@ export default function UserProfile() {
 
   return (
     <div className="flex flex-col items-center p-4">
-      <h1 className="text-2xl font-bold mb-4">User Profile</h1>
-      
+      <div className="w-full max-w-2xl mb-8">
+        <p className="text-3xl font-bold mb-4">Your Web3 addresss, {address}</p>
+        <p className="text-xl font-semibold mb-4">Your General Balance: {ethers.utils.formatEther(generalBalance)}</p>
+      </div>
       <div className="flex justify-between w-full max-w-2xl mb-8">
         <div className="bg-green-100 p-4 rounded-lg shadow-md w-[48%]">
           <h2 className="text-lg font-semibold mb-2">Total Incoming</h2>
@@ -218,10 +233,8 @@ export default function UserProfile() {
             </tr>
           </thead>
           <tbody>
-            {userTransactions
-              .sort((a, b) => Number(b.id) - Number(a.id))
-              .map((item) => (
-                <tr key={item.id} className={item.isExpense ? 'bg-red-50' : 'bg-green-50'}>
+          {userTransactions.sort((a, b) => Number(b.id) - Number(a.id)).map((item) => (
+                <tr key={item.id.toString()} className={item.isExpense ? 'bg-red-50' : 'bg-green-50'}>
                   <td className="p-2">{item.isExpense ? 'Expense' : 'Payment'}</td>
                   <td className="p-2">{item.name}</td>
                   <td className="p-2">{item.description}</td>

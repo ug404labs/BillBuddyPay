@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useSacco, SaccoGroup } from '../hooks/useSacco'; // Adjust path as per your project structure
 
+const SACCO_CREATION_FEE = BigInt(1e18); // 1 USDC (assuming 18 decimal places)
+
+// In your handleCreateGroup function:
+
 const SaccoPage: React.FC = () => {
     const { address, createSaccoGroup, contribute, withdrawFixedTerm, getSaccoGroups, isMember } = useSacco();
     const [isOpen, setIsOpen] = useState(false);
@@ -11,7 +15,7 @@ const SaccoPage: React.FC = () => {
     const [newGroupPeriod, setNewGroupPeriod] = useState<'WEEKLY' | 'MONTHLY' | 'FORTNIGHTLY' | 'YEARLY'>('MONTHLY');
     const [newGroupContribution, setNewGroupContribution] = useState('');
     const [newGroupDuration, setNewGroupDuration] = useState('');
-    const [newGroupMembers, setNewGroupMembers] = useState('');
+    const [newGroupMembers, setNewGroupMembers] = useState('')
 
     useEffect(() => {
         fetchSaccoGroups();
@@ -34,25 +38,30 @@ const SaccoPage: React.FC = () => {
         e.preventDefault();
         if (!address) return;
 
-        await createSaccoGroup(
-            newGroupName,
-            newGroupType,
-            newGroupPeriod,
-            newGroupContribution,
-            parseInt(newGroupDuration),
-            newGroupMembers.split(',').map(m => m.trim())
-        );
-        fetchSaccoGroups();
-        // Reset form fields
-        setNewGroupName('');
-        setNewGroupType('ROTATING');
-        setNewGroupPeriod('MONTHLY');
-        setNewGroupContribution('');
-        setNewGroupDuration('');
-        setNewGroupMembers('');
-        closeModal();
+        try {
+            await createSaccoGroup(
+                newGroupName,
+                newGroupType,
+                newGroupPeriod,
+                newGroupContribution,
+                parseInt(newGroupDuration),
+                newGroupMembers.split(',').map(m => m.trim()),
+                SACCO_CREATION_FEE // Pass the creation fee
+            );
+            fetchSaccoGroups();
+            // Reset form fields
+            setNewGroupName('');
+            setNewGroupType('ROTATING');
+            setNewGroupPeriod('MONTHLY');
+            setNewGroupContribution('');
+            setNewGroupDuration('');
+            setNewGroupMembers('');
+            closeModal();
+        } catch (error) {
+            console.error("Error creating Sacco group:", error);
+            // Here you might want to show an error message to the user
+        }
     };
-
     const handleContribute = async (groupId: number) => {
         if (!address) return;
         await contribute(groupId);
@@ -210,6 +219,19 @@ const SaccoPage: React.FC = () => {
                                             required
                                         />
                                     </div>
+                                    <div>
+                            <label htmlFor="creationFee" className="block text-sm font-medium text-gray-700">
+                                Sacco Creation Fee (USDC)
+                            </label>
+                            <input
+                                id="creationFee"
+                                name="creationFee"
+                                type="number"
+                                value="1 USDC"
+                                className="mt-1 p-2 w-full border border-gray-300 rounded-md bg-gray-100"
+                                disabled
+                            />
+                        </div>
                                     <div className="mt-6 flex justify-end">
                                         <button
                                             type="button"

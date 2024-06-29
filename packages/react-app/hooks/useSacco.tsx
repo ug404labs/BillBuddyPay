@@ -23,7 +23,15 @@ export interface SaccoGroup {
 interface UseSaccoHook {
     address: string | null;
     getUserAddress: () => Promise<void>;
-    createSaccoGroup: (name: string, type: "ROTATING" | "FIXED_TERM", period: "WEEKLY" | "MONTHLY" | "FORTNIGHTLY" | "YEARLY", contributionAmount: string, durationInPeriods: number, members: string[]) => Promise<any>;
+    createSaccoGroup: (
+        name: string,
+        type: "ROTATING" | "FIXED_TERM",
+        period: "WEEKLY" | "MONTHLY" | "FORTNIGHTLY" | "YEARLY",
+        contributionAmount: string,
+        durationInPeriods: number,
+        members: string[],
+        saccoCreationFee: bigint
+    ) => Promise<any>;
     contribute: (groupId: number) => Promise<any>;
     withdrawFixedTerm: (groupId: number) => Promise<any>;
     getSaccoGroups: () => Promise<SaccoGroup[]>;
@@ -52,28 +60,37 @@ export const useSacco = (): UseSaccoHook => {
         }
     };
 
-    const createSaccoGroup = async (name: string, type: "ROTATING" | "FIXED_TERM", period: "WEEKLY" | "MONTHLY" | "FORTNIGHTLY" | "YEARLY", contributionAmount: string, durationInPeriods: number, members: string[]) => {
+    const createSaccoGroup = async (
+        name: string,
+        type: "ROTATING" | "FIXED_TERM",
+        period: "WEEKLY" | "MONTHLY" | "FORTNIGHTLY" | "YEARLY",
+        contributionAmount: string,
+        durationInPeriods: number,
+        members: string[],
+        saccoCreationFee: bigint // Add this parameter
+    ) => {
         try {
             let walletClient = createWalletClient({
                 transport: custom(window.ethereum),
                 chain: celoAlfajores,
             });
-
+    
             let [address] = await walletClient.getAddresses();
             const contributionAmountInSmallestUnit = parseUnits(contributionAmount, 6); // Assuming USDC has 6 decimal places
-
+    
             const tx = await walletClient.writeContract({
                 address: SACCO_CONTRACT,
                 abi: SaccoABI,
                 functionName: "createSaccoGroup",
                 account: address,
                 args: [name, type === "ROTATING" ? 0 : 1, ["WEEKLY", "MONTHLY", "FORTNIGHTLY", "YEARLY"].indexOf(period), contributionAmountInSmallestUnit, durationInPeriods, members],
-                value: saccoCreationFee, // Ensure the fee is provided
+                value: saccoCreationFee, // Use the provided fee
             });
-
+    
             return tx;
         } catch (error) {
             console.error("Error creating Sacco group:", error);
+            throw error; // Re-throw the error so it can be handled in the component
         }
     };
 

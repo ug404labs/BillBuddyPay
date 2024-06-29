@@ -59,7 +59,7 @@ export default function Header() {
                                 </div>
                                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                                     <a
-                                        href="#"
+                                        href="/"
                                         className="inline-flex items-center border-b-2 border-black px-1 pt-1 text-sm font-medium text-gray-900"
                                     >
                                         Home
@@ -115,39 +115,33 @@ export default function Header() {
                         <div className="space-y-1 pt-2 pb-4">
                             <Disclosure.Button
                                 as="a"
-                                href="#"
+                                href="/"
                                 className="block border-l-4 border-black py-2 pl-3 pr-4 text-base font-medium text-black"
                             >
                                 Home
                             </Disclosure.Button>
                             <Disclosure.Button
                                 as="a"
-                                href="#"
+                                href="/payments"
                                 className="block border-l-4 border-black py-2 pl-3 pr-4 text-base font-medium text-black"
                             >
-                                Savings Groups
+                                Payments
                             </Disclosure.Button>
                             <Disclosure.Button
                                 as="a"
-                                href="#"
+                                href="/saccos"
                                 className="block border-l-4 border-black py-2 pl-3 pr-4 text-base font-medium text-black"
                             >
-                                Reports
+                                Saccos
                             </Disclosure.Button>
                             <Disclosure.Button
                                 as="a"
-                                href="#"
+                                href="/"
                                 className="block border-l-4 border-black py-2 pl-3 pr-4 text-base font-medium text-black"
                             >
                                 Donations
                             </Disclosure.Button>
-                            <Disclosure.Button
-                                as="a"
-                                href="#"
-                                className="block border-l-4 border-black py-2 pl-3 pr-4 text-base font-medium text-black"
-                            >
-                                Shared Payments
-                            </Disclosure.Button>
+                          
                         </div>
                     </Disclosure.Panel>
                 </>
