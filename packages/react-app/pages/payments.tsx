@@ -204,20 +204,19 @@ export default function UserProfile() {
   return (
     <div className="flex flex-col items-center p-4">
       <div className="w-full max-w-2xl mb-8">
-        <p className="text-3xl font-bold mb-4">Your Web3 addresss, {address}</p>
+        <p className="text-l mb-4">Your Web3 addresss, {address}</p>
         <p className="text-xl font-semibold mb-4">Your General Balance: {generalBalance}</p>
       </div>
-      <div className="flex justify-between w-full max-w-2xl mb-8">
-        <div className="bg-green-100 p-4 rounded-lg shadow-md w-[48%]">
+      <div className="flex flex-col md:flex-row justify-between w-full max-w-2xl mb-8">
+        <div className="bg-green-100 p-4 rounded-lg shadow-md w-full md:w-[48%] mb-4 md:mb-0">
           <h2 className="text-lg font-semibold mb-2">Total Incoming</h2>
           <p className="text-2xl font-bold text-green-600">${totalIncoming}</p>
         </div>
-        <div className="bg-red-100 p-4 rounded-lg shadow-md w-[48%]">
+        <div className="bg-red-100 p-4 rounded-lg shadow-md w-full md:w-[48%]">
           <h2 className="text-lg font-semibold mb-2">Total Outgoing</h2>
           <p className="text-2xl font-bold text-red-600">${totalOutgoing}</p>
         </div>
       </div>
-
       <button
         onClick={() => setIsCreateModalOpen(true)}
         className="px-6 py-3 mb-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none"
