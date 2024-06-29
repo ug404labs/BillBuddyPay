@@ -1,124 +1,91 @@
-# Hardhat | Celo Composer
+# BillBuddy: Smart Contracts for Project and Sacco Management on Celo
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts.
+BillBuddy is a blockchain-based solution for managing shared expenses in projects and local savings groups (Saccos), built on the Celo network. This repository contains two Solidity smart contracts designed to provide efficient and transparent ways to handle financial transactions within groups on Celo.
 
-## Setup & Installation
+## Contracts
 
-### Alfajores Testnet Setup
+1. BillBuddyProjectPay 
+'''
+Adresss = 0x692e707Ef595a575c69a963003AF93aeC2c95805
+'''
+2. BillBuddySaccoManager
 
-**Note** This setup is not required when using a local development blockchain (like celo-devchain or Ganache).
+## BillBuddyProjectPay Contract
 
-1. Create a `.env` file similar to `.envexample`.
-2. Paste the private key in `.env`.
+The BillBuddyProjectPay contract handles shared expenses and payments for projects on Celo.
 
-Alternatively, you can also run the following command to generate a new account
+### Main Features:
 
-```sh
-npx hardhat create-account
-```
+- Create shared payments with multiple recipients
+- Receive and automatically distribute payments according to predefined shares
+- Create shared expenses with multiple payers
+- Pay expenses and handle refunds
+- View payment and expense details
 
-> **Note** : Depending on how you generate your private key, you may have to prepend `0x` in the private key does not already have it prepended.
+### Key Functions:
 
-3. Faucet your account with the Alfajores testnet faucet [here](https://celo.org/developers/faucet).
+- `createPayment`: Create a new shared payment
+- `receivePayment`: Receive and distribute a payment
+- `createExpense`: Create a new shared expense
+- `payExpense`: Pay an expense and handle refunds
+- `getPaymentDetails`: View details of a specific payment
+- `getExpenseDetails`: View details of a specific expense
 
-## Develop
+## BillBuddySaccoManager Contract
 
-1. Write your contracts in `./contracts`.
-2. Update contract deployment scripts in `./deploy`.
-3. Deploy contracts with `yarn deploy` from the **root directory**. Optionally add the reset flag (`yarn deploy --reset`) to overwrite previous deployment info. The default deployment network is specified in `hardhat.config.js` and is set to `alfajores` initially. You can also overwrite previous deployments and redeploy when there are changes to the deployment script or contracts automatically by running `yarn deploy-reset-watch`. You can specify a specific network deployment directly with
+The BillBuddySaccoManager contract manages local savings groups (Saccos) with regular contributions and distributions on Celo.
 
-```bash
-npx hardhat deploy --network [network name]
-```
+### Main Features:
 
-Network configs are defined in `hardhat.config.js`.
+- Add members to the savings group
+- Receive member contributions
+- Manage contribution rounds (e.g., weekly)
+- Automatically distribute funds to members in a round-robin fashion
+- Allow admin to manage rounds and group parameters
+- View member and round details
 
-## [Celo devchain](https://github.com/terminal-fi/celo-devchain)
+### Key Functions:
 
-Run a local development Celo chain with `yarn devchain` in the `packages/hardhat` folder. You can print the addresses of the [Celo protocol contracts](https://github.com/celo-org/celo-monorepo/tree/master/packages/protocol) with `npx @terminal-fi/celo-devchain --test`.
+- `addMember`: Add a new member to the group
+- `contribute`: Allow members to make contributions
+- `distributeRound`: Automatically distribute funds for a completed round
+- `endRound`: Manually end a round (admin only)
+- `getMemberDetails`: View details of a specific member
+- `getRoundDetails`: View details of a specific round
+- `updateContributionAmount`: Update the required contribution amount (admin only)
+- `updateRoundDuration`: Update the duration of rounds (admin only)
+- `withdrawExcessFunds`: Withdraw any excess funds in the contract (admin only)
 
-This is a version of Ganache (@celo/ganache-cli) that deploys the Celo core protocol contracts when it starts.
+## Using BillBuddy on Celo
 
-**NOTE:** @celo/ganache-cli works only with Node 10 or Node 12 versions. Using Node 14 or later will result in errors.
+To use BillBuddy:
 
-**NOTE:** @celo/ganache-cli currently doesn't support locally signed transactions. If you send a locally signed transaction it will throw: Error: Number can only safely store up to 53 bits error and crash. Thus you have to make sure your ContractKit doesn't actually have the private keys for test addresses and send transactions to be signed by ganache-cli itself.
+1. Deploy the contracts to the Celo blockchain.
+2. For BillBuddyProjectPay:
+   - Create payments and expenses using the respective functions.
+   - Members can contribute to expenses and receive payments through the contract.
+3. For BillBuddySaccoManager:
+   - Add members to the group using the `addMember` function.
+   - Set the contribution amount and round duration.
+   - Members can contribute using the `contribute` function.
+   - Rounds will automatically distribute funds, or the admin can end rounds manually if needed.
 
-### Start
+## Celo-Specific Considerations
 
-```bash
-npx celo-devchain --port 8545
-```
+- Ensure you have a Celo wallet and sufficient CELO tokens for gas fees.
+- Familiarize yourself with Celo's transaction mechanisms and gas pricing.
+- Consider using Celo's native stablecoin (cUSD) for stable-value transactions within BillBuddy.
 
-or
+## Security Considerations
 
-```bash
-yarn devchain
-```
+- Ensure that only authorized addresses can perform admin functions in BillBuddy.
+- Regularly audit the BillBuddy contracts for potential vulnerabilities.
+- Test thoroughly on Celo's testnet (Alfajores) before deploying to Celo mainnet.
 
-### Generate Typescript bindings
+## License
 
-This setting defaults to the web3 v1 bindings because that is what is used by use-contractkit in `packages/react-app`.
+BillBuddy is released under the MIT License.
 
-You can change the output directory and target in `hardhat.config.js`.
+## Disclaimer
 
-```bash
-npx hardhat typechain
-```
-
-Read more about Typechain [here](https://github.com/dethcrypto/TypeChain) and more about the hardhat plugin [here](https://github.com/dethcrypto/TypeChain/tree/master/packages/hardhat).
-
-### Run sanity tests and print all core contract addresses
-
-```bash
-npx @terminal-fi/celo-devchain --test
-```
-
-## Fork mainnet with [Ganache](https://trufflesuite.com/blog/introducing-ganache-7/index.html#1-zero-config-mainnet-forking)
-
-You can get a local copy of mainnet by forking with Ganache. Learn more about [forking mainnet with Ganache here.](https://trufflesuite.com/blog/introducing-ganache-7/index.html#1-zero-config-mainnet-forking)
-
-There is a script provided (`yarn fork-mainnet`) to fork mainnet and fund the same test accounts that come with Celo devchain. Sometimes sending transactions from the first account (which defaults to `0x5409ED021D9299bf6814279A6A1411A7e866A631`) is delayed and sending test transactions from the other accounts works better for some reason. :shrug: The private keys of the associated test accounts are printed in `account_keys.json`.
-
-## Celo Core Contracts
-
-You can easily import Celo Core contracts to be used by your contracts like so:
-
-```solidity
-import '@celo/contracts/common/Accounts.sol';
-```
-
-## Verify your contracts
-
-### hardhat-celo
-
-You can easily verify your contracts deployed to the associated networks with hardhat-celo.
-
-[Reference](https://docs.celo.org/developer/verify/hardhat)
-
-```bash
-npx hardhat verify smart-contract-address parameter(s) --network alfajores
-```
-
-On Mainnet:
-
-```bash
-npx hardhat verify smart-contract-address parameter(s) --network celo
-```
-
-### Sourcify
-
-Additionally, you can easily verify your contracts deployed to the associated networks with the following commands.
-
-[Reference](https://docs.celo.org/blog/hardhat-deploy-verify)
-
-On Alfajores:
-
-```bash
-npx hardhat --network alfajores sourcify
-```
-
-On Mainnet:
-
-```bash
-npx hardhat --network celo sourcify
-```
+BillBuddy smart contracts are provided as-is. Users should perform their own security audit before using them in a production environment on the Celo network. The authors of BillBuddy are not responsible for any losses incurred through the use of these contracts.
