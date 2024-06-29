@@ -4,11 +4,11 @@ BillBuddy is a blockchain-based solution for managing shared expenses in project
 
 ## Contracts
 
-1. BillBuddyProjectPay 
-'''
-Adresss = 0x692e707Ef595a575c69a963003AF93aeC2c95805
-'''
-2. BillBuddySaccoManager
+"""
+REACT_APP_BILLBUDDY_sacco_ADDRESS=0x896657d5BC3A5B84197E91B5a4B797aeE9987710
+REACT_APP_BILLBUDDY_PAY_CONTRACT=0x19Bb51d383186369B5122B72a196A57C63f2c2bD
+REACT_APP_USDCBUDDY_ADDRESS=0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1
+"""
 
 ## BillBuddyProjectPay Contract
 

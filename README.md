@@ -1,22 +1,20 @@
-<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
+Here's the updated README.md with detailed information about BillBuddy, including its sacco functionality and shared expenses:
 
+```markdown
 <a name="readme-top"></a>
 
-<!-- PROJECT LOGO -->
-<br />
 <div align="center">
-  <a href="https://github.com/othneildrew/Best-README-Template">
+  <a href="https://github.com/celo-org/celo-composer">
     <img width="100px" src="https://github.com/celo-org/celo-composer/blob/main/images/readme/celo_isotype.svg" align="center" alt="Celo" />
   </a>
 
-  <h3 align="center">SplitParty</h3>
+  <h3 align="center">BillBuddy</h3>
 
   <p align="center">
-    MiniPay dApps that allows splitting expenses between friends.
+    A MiniPay dApp that allows splitting expenses between friends and managing sacco groups, making group payments and savings easy and transparent.
   </p>
 </div>
 
-<!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
   <ol>
@@ -43,13 +41,7 @@
 
 ## About The Project
 
-|                                                |                                                  |                                                      |
-| :--------------------------------------------: | :----------------------------------------------: | :--------------------------------------------------: |
-| ![](packages/react-app/public/main_screen.png) | ![](packages/react-app/public/expense_modal.png) | ![](packages/react-app/public/resolving_address.png) |
-
-SplitParty is a dApp that can run inside MiniPay Site Tester, it let's user split expenses among friends. The dApp also has a feature to lookup MiniPay registered users so you can use phone number of the user instead of their entire account address.
-
-This project is created so developers can use it as a reference and take code from this project to add SocialConnect and MiniPay compatibility.
+BillBuddy is a MiniPay decentralized application (dApp) designed to simplify group expenses and payments among friends. It also incorporates sacco functionalities, enabling users to create and manage savings groups with ease. BillBuddy ensures automatic and secure transactions, making it an ideal solution for managing shared expenses and group savings.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -93,17 +85,17 @@ This project is created so developers can use it as a reference and take code fr
     yarn install
     ```
 
-3. Get WalletConnect projectId from [here](https://cloud.walletconnect.com/sign-in) and set is as enviroment variable in `/code/packages/react-app/.env.local`
+3. Get WalletConnect projectId from [here](https://cloud.walletconnect.com/sign-in) and set it as an environment variable in `/code/packages/react-app/.env.local`
 
-4. Setup your Issuer and DEK following the steps [here](https://github.com/celo-org/social-connect/blob/main/docs/key-setup.md) and set the respective environment variables in `/code/packages/react-app/.env.local`.
+4. Set up your Issuer and DEK following the steps [here](https://github.com/celo-org/social-connect/blob/main/docs/key-setup.md) and set the respective environment variables in `/code/packages/react-app/.env.local`.
 
-5. Set `NEXT_PUBLIC_ENVIRONMENT` in`/code/packages/react-app/.env.local` as `MAINNET` to use the app in MiniPay Site Tester.
+5. Set `NEXT_PUBLIC_ENVIRONMENT` in `/code/packages/react-app/.env.local` as `MAINNET` to use the app in MiniPay Site Tester.
 
 6. Run the project using the following command:
 
-```sh
-yarn dev
-```
+    ```sh
+    yarn dev
+    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -111,6 +103,9 @@ yarn dev
 
 ## Usage
 
+-   BillBuddy allows users to manage shared expenses and sacco groups seamlessly.
+-   Users can create shared transactions, contribute to expenses, and manage group savings.
+-   Detailed transaction history and real-time updates ensure transparency and ease of use.
 -   [Here](/code/packages/react-app/pages/api/socialconnect/lookup.ts) is the code to lookup MiniPay registered users, it is expected you learn from this project and take the code you need for your own project.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -127,8 +122,9 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 ## Contact
 
-If you need any help, raise an issue [here](https://github.com/celo-org/ethglobal-istanbul/discussions/categories/q-a) or get in touch:
+Your Name - [@illmindofbanana](https://twitter.com/illmindofbanana) - studyug@hotmail.com
 
-Harpalsinh Jadeja - [@harpaljadeja11](https://twitter.com/harpaljadeja11) - harpalsinh.jadeja@celo.org
+Project Link: 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+```
