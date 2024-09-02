@@ -1,7 +1,8 @@
 "use client";
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+
+import Link from 'next/link';
 
 
 const LandingPage = () => {
@@ -17,12 +18,15 @@ const LandingPage = () => {
                     To Manage Joint  Finicial Moves.
                 </p>
                 <p>Risk-free, transparent, and secure.</p>
-                <button
+                <Link href="/signin" className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded text-center">
+                    Sign In
+                </Link>
+                {/* <button
                     className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-full shadow-lg"
-                    onClick={() => window.location.href='/get-started'}
+                    onClick={() => router.push('/SignInPage')}
                 >
                     Get Started
-                </button>
+                </button> */}
             </section>
 
             <section className="bg-orange-100 w-full py-12 mt-12">
