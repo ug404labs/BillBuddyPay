@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {getAuth , signOut} from 'firebase/auth'
-import {app}  from "../config"
+import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth'
+import { app } from "../config"
 import { useRouter } from "next/navigation";
 import { socialConnect } from "../utils/socialconnect";
 
@@ -14,14 +14,17 @@ export default function Dashboard() {
   const auth = getAuth(app);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
           const userData = await socialConnect(firebaseUser.phoneNumber);
+          console.log("User data:", userData);
           setUser(userData);
         } catch (error) {
           console.error("Error fetching user data:", error);
-          // Handle error (e.g., show error message to user)
+          alert("Failed to fetch user data. Please try signing in again.");
+          await signOut(auth);
+          router.push("/signin");
         }
       } else {
         router.push("/signin");
@@ -30,10 +33,20 @@ export default function Dashboard() {
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [auth, router]);
 
   const handleChainToggle = () => {
     setSelectedChain(selectedChain === "Celo" ? "Arbitrum" : "Celo");
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push("/signin");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      alert("Failed to sign out. Please try again.");
+    }
   };
 
   if (loading) {
@@ -54,8 +67,14 @@ export default function Dashboard() {
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-light-blue-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
         <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
           <div className="max-w-md mx-auto">
-            <div>
+            <div className="flex justify-between items-center">
               <h1 className="text-2xl font-semibold">Dashboard</h1>
+              <button
+                onClick={handleSignOut}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+              >
+                Sign Out
+              </button>
             </div>
             <div className="divide-y divide-gray-200">
               <div className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
