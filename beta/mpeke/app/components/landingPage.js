@@ -1,63 +1,72 @@
 "use client";
 
-import React from 'react';
-
+import React, { useState } from 'react';
 import Link from 'next/link';
-
+import { FaDollarSign, FaUsers, FaRegCalendarAlt, FaHandHoldingUsd, FaPhone } from 'react-icons/fa'; // Font Awesome icons
 
 const LandingPage = () => {
+    const [loading, setLoading] = useState(false);
+
+    const handleSignInClick = () => {
+        setLoading(true);
+        setTimeout(() => { // Simulate loading
+            setLoading(false);
+        }, 2000); // Adjust the timeout as needed
+    };
+
     return (
         <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-green-100 text-gray-800">
             <section className="max-w-4xl mx-auto text-center">
                 <h1 className="text-4xl font-extrabold mb-6 text-green-600">Welcome to Mpeke</h1>
                 <p className="text-lg mb-8 text-gray-700">
-                    Leverage the power of blockchain technology to </p>
-                    <p className="text-lg mb-8 text-gray-700">
-                    Manage Savings, Group Expense Splitting, Automatic Payments, and Joint Financial Moves.</p>
-                    <p>
-                    To Manage Joint  Finicial Moves.
+                    Leverage the power of blockchain technology to
                 </p>
-                <p>Risk-free, transparent, and secure.</p>
+                <p className="text-lg mb-8 text-gray-700">
+                    Manage Savings, Group Expense Splitting, Automatic Payments, and Joint Financial Moves.
+                </p>
+                <p className="text-lg mb-8 text-gray-700">
+                    Risk-free, transparent, and secure.
+                </p>
                 <Link href="/signin" className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded text-center">
                     Sign In
                 </Link>
-                {/* <button
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-full shadow-lg"
-                    onClick={() => router.push('/SignInPage')}
-                >
-                    Get Started
-                </button> */}
+
             </section>
 
             <section className="bg-orange-100 w-full py-12 mt-12">
                 <div className="max-w-4xl mx-auto text-center">
                     <h2 className="text-3xl font-bold mb-4 text-orange-600">Key Features</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div className="bg-white p-6 rounded-lg shadow-lg">
+                        <div className="bg-white p-6 rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                            <FaDollarSign className="text-3xl text-green-500 mb-3" />
                             <h3 className="text-xl font-semibold text-gray-800 mb-3">Group Expense Splitting</h3>
                             <p className="text-gray-600">
                                 Easily split bills and expenses among friends, with automatic tracking of who owes what.
                             </p>
                         </div>
-                        <div className="bg-white p-6 rounded-lg shadow-lg">
+                        <div className="bg-white p-6 rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                            <FaUsers className="text-3xl text-green-500 mb-3" />
                             <h3 className="text-xl font-semibold text-gray-800 mb-3">Sacco Group Management</h3>
                             <p className="text-gray-600">
                                 Create and manage savings groups with customizable settings for contributions, duration, and member management.
                             </p>
                         </div>
-                        <div className="bg-white p-6 rounded-lg shadow-lg">
+                        <div className="bg-white p-6 rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                            <FaRegCalendarAlt className="text-3xl text-green-500 mb-3" />
                             <h3 className="text-xl font-semibold text-gray-800 mb-3">Automatic Payments</h3>
                             <p className="text-gray-600">
                                 Set up recurring payments within groups to ensure that contributions and payments are made on time.
                             </p>
                         </div>
-                        <div className="bg-white p-6 rounded-lg shadow-lg">
+                        <div className="bg-white p-6 rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                            <FaHandHoldingUsd className="text-3xl text-green-500 mb-3" />
                             <h3 className="text-xl font-semibold text-gray-800 mb-3">Joint Investments</h3>
                             <p className="text-gray-600">
                                 Pool resources with friends for joint investments, with transparent tracking and management of funds.
                             </p>
                         </div>
-                        <div className="bg-white p-6 rounded-lg shadow-lg">
+                        <div className="bg-white p-6 rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                            <FaPhone className="text-3xl text-green-500 mb-3" />
                             <h3 className="text-xl font-semibold text-gray-800 mb-3">Phone Number Linking</h3>
                             <p className="text-gray-600">
                                 Link EVM wallets to phone numbers for easy access and management of group finances.

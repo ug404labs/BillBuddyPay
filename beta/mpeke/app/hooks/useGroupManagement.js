@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ethers } from "ethers";
-import GroupSavingsABI from "../contracts/groupManager.abi.json"; // Replace with the actual path to your ABI
+import GroupSavingsABI from "../contracts/groupManager.abi.json"
 
 const useGroupManagement = (contractAddress, selectedChain) => {
     const [error, setError] = useState(null);
