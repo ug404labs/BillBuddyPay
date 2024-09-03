@@ -1,16 +1,19 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
 import { app } from "../config";
 import { useRouter } from "next/navigation";
 import { socialConnect } from "../utils/socialconnect";
 import useGroupManagement from "../hooks/useGroupManagement"; // Import the custom hook
+import { ethers, JsonRpcApiProvider } from "ethers";
+
 
 export default function Dashboard() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedChain, setSelectedChain] = useState("Celo");
-    const [groupForm, setGroupForm] = useState({ name: "", savingType: 0, members: [], totalAmount: "", contributionAmount: "", rounds: "", roundDuration: "" });
+    const [groupForm, setGroupForm] = useState({ name: "", savingType: 0, members: "", totalAmount: "", contributionAmount: "", rounds: "", roundDuration: "" });
     const [contributionForm, setContributionForm] = useState({ groupId: "", amount: "" });
     const router = useRouter();
     const auth = getAuth(app);
@@ -68,7 +71,7 @@ export default function Dashboard() {
         e.preventDefault();
         const { name, savingType, members, totalAmount, contributionAmount, rounds, roundDuration } = groupForm;
         await createSavingGroup(name, savingType, members.split(','), ethers.utils.parseUnits(totalAmount, 6), ethers.utils.parseUnits(contributionAmount, 6), rounds, roundDuration);
-        setGroupForm({ name: "", savingType: 0, members: [], totalAmount: "", contributionAmount: "", rounds: "", roundDuration: "" });
+        setGroupForm({ name: "", savingType: 0, members: "", totalAmount: "", contributionAmount: "", rounds: "", roundDuration: "" });
     };
 
     const handleContributionSubmit = async (e) => {
@@ -78,42 +81,157 @@ export default function Dashboard() {
     };
 
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
+            </div>
+        );
     }
 
     return (
-        <div>
-            <h1>Dashboard</h1>
-            <p>Phone Number: {user.phoneNumber}</p>
-            <p>Wallet Address: {user.address}</p>
+        <div className="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
+            <div className="relative py-3 sm:max-w-xl sm:mx-auto">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-light-blue-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
+                <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
+                    <div className="max-w-md mx-auto">
+                        <div className="flex items-center justify-between mb-4">
+                            <h1 className="text-2xl font-semibold">Dashboard</h1>
+                            <button
+                                onClick={handleSignOut}
+                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                            >
+                                Sign Out
+                            </button>
+                        </div>
+                        <div className="divide-y divide-gray-200">
+                            <div className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
+                                <p>Phone Number: <span className="font-semibold">{user.phoneNumber}</span></p>
+                                <p>Wallet Address: <span className="font-semibold">{user.address}</span></p>
+                                <div className="flex items-center justify-between mt-4">
+                                    <span className="text-lg font-medium">Selected Chain: {selectedChain}</span>
+                                    <button
+                                        onClick={handleChainToggle}
+                                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                                    >
+                                        Toggle Chain
+                                    </button>
+                                </div>
+                            </div>
 
-            <button onClick={handleChainToggle}>
-                Switch to {selectedChain === "Celo" ? "Arbitrum" : "Celo"}
-            </button>
+                            <div className="pt-8">
+                                <h2 className="text-xl font-semibold mb-4">Create Saving Group</h2>
+                                <form onSubmit={handleGroupSubmit} className="space-y-4">
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        placeholder="Group Name"
+                                        value={groupForm.name}
+                                        onChange={handleGroupChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                    <select
+                                        name="savingType"
+                                        value={groupForm.savingType}
+                                        onChange={handleGroupChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="0">Fixed</option>
+                                        <option value="1">Circular</option>
+                                    </select>
+                                    <input
+                                        type="text"
+                                        name="members"
+                                        placeholder="Members (comma-separated addresses)"
+                                        value={groupForm.members}
+                                        onChange={handleGroupChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        name="totalAmount"
+                                        placeholder="Total Amount"
+                                        value={groupForm.totalAmount}
+                                        onChange={handleGroupChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        name="contributionAmount"
+                                        placeholder="Contribution Amount"
+                                        value={groupForm.contributionAmount}
+                                        onChange={handleGroupChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        name="rounds"
+                                        placeholder="Total Rounds"
+                                        value={groupForm.rounds}
+                                        onChange={handleGroupChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        name="roundDuration"
+                                        placeholder="Round Duration (seconds)"
+                                        value={groupForm.roundDuration}
+                                        onChange={handleGroupChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                                    >
+                                        Create Group
+                                    </button>
+                                </form>
+                            </div>
 
-            <h2>Create Saving Group</h2>
-            <form onSubmit={handleGroupSubmit}>
-                <input type="text" name="name" placeholder="Group Name" value={groupForm.name} onChange={handleGroupChange} required />
-                <select name="savingType" value={groupForm.savingType} onChange={handleGroupChange}>
-                    <option value="0">Fixed</option>
-                    <option value="1">Circular</option>
-                </select>
-                <input type="text" name="members" placeholder="Members (comma-separated addresses)" value={groupForm.members} onChange={handleGroupChange} required />
-                <input type="text" name="totalAmount" placeholder="Total Amount" value={groupForm.totalAmount} onChange={handleGroupChange} required />
-                <input type="text" name="contributionAmount" placeholder="Contribution Amount" value={groupForm.contributionAmount} onChange={handleGroupChange} required />
-                <input type="text" name="rounds" placeholder="Total Rounds" value={groupForm.rounds} onChange={handleGroupChange} required />
-                <input type="text" name="roundDuration" placeholder="Round Duration (seconds)" value={groupForm.roundDuration} onChange={handleGroupChange} required />
-                <button type="submit">Create Group</button>
-            </form>
+                            <div className="pt-8">
+                                <h2 className="text-xl font-semibold mb-4">Contribute to Group</h2>
+                                <form onSubmit={handleContributionSubmit} className="space-y-4">
+                                    <input
+                                        type="text"
+                                        name="groupId"
+                                        placeholder="Group ID"
+                                        value={contributionForm.groupId}
+                                        onChange={handleContributionChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        name="amount"
+                                        placeholder="Amount"
+                                        value={contributionForm.amount}
+                                        onChange={handleContributionChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                                    >
+                                        Contribute
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <h2>Contribute to Group</h2>
-            <form onSubmit={handleContributionSubmit}>
-                <input type="text" name="groupId" placeholder="Group ID" value={contributionForm.groupId} onChange={handleContributionChange} required />
-                <input type="text" name="amount" placeholder="Amount" value={contributionForm.amount} onChange={handleContributionChange} required />
-                <button type="submit">Contribute</button>
-            </form>
-
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {error && (
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-red-500 text-white text-center">
+                    {error}
+                </div>
+            )}
         </div>
     );
 }
