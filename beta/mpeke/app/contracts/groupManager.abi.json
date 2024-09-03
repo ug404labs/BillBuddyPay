@@ -1,0 +1,347 @@
+[
+    {
+      "type": "constructor",
+      "inputs": [
+        {
+          "name": "_usdcTokenAddress",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "contributeToGroup",
+      "inputs": [
+        {
+          "name": "_groupId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_amount",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "createSavingGroup",
+      "inputs": [
+        {
+          "name": "_name",
+          "type": "string",
+          "internalType": "string"
+        },
+        {
+          "name": "_savingType",
+          "type": "uint8",
+          "internalType": "enum GroupSavings.SavingType"
+        },
+        {
+          "name": "_members",
+          "type": "address[]",
+          "internalType": "address[]"
+        },
+        {
+          "name": "_totalAmount",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_contributionAmount",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_rounds",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_roundDuration",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "getGroupDetails",
+      "inputs": [
+        {
+          "name": "_groupId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple",
+          "internalType": "struct GroupSavings.GroupDetails",
+          "components": [
+            {
+              "name": "id",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "internalType": "string"
+            },
+            {
+              "name": "savingType",
+              "type": "uint8",
+              "internalType": "enum GroupSavings.SavingType"
+            },
+            {
+              "name": "members",
+              "type": "address[]",
+              "internalType": "address[]"
+            },
+            {
+              "name": "totalAmount",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "contributionAmount",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "totalShares",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "rounds",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "roundDuration",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "currentRound",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "lastDistribution",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "groupCount",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "savingGroups",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "internalType": "string"
+        },
+        {
+          "name": "savingType",
+          "type": "uint8",
+          "internalType": "enum GroupSavings.SavingType"
+        },
+        {
+          "name": "totalAmount",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "contributionAmount",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "totalShares",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "rounds",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "roundDuration",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "currentRound",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "lastDistribution",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "settleRound",
+      "inputs": [
+        {
+          "name": "_groupId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "usdcToken",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "contract IERC20"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "ContributionMade",
+      "inputs": [
+        {
+          "name": "groupId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "contributor",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "FundsDistributed",
+      "inputs": [
+        {
+          "name": "groupId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "round",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "GroupCreated",
+      "inputs": [
+        {
+          "name": "groupId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "indexed": false,
+          "internalType": "string"
+        },
+        {
+          "name": "savingType",
+          "type": "uint8",
+          "indexed": false,
+          "internalType": "enum GroupSavings.SavingType"
+        },
+        {
+          "name": "members",
+          "type": "address[]",
+          "indexed": false,
+          "internalType": "address[]"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "GroupSettled",
+      "inputs": [
+        {
+          "name": "groupId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "round",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    }
+  ]
