@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth'
 import { app } from '../config'
 import { useRouter } from 'next/navigation';
+import PhoneInput from 'react-phone-input-2'
+import 'react-phone-input-2/lib/style.css'
 
 export default function SignInPage() {
     const [phoneNumber, setPhoneNumber] = useState('')
@@ -23,8 +25,11 @@ export default function SignInPage() {
         });
     }, [auth]);
 
-    const handlePhoneNumberChange = (e) => {
-        setPhoneNumber(e.target.value);
+    const handlePhoneNumberChange = (value) => {
+        console.log(value)
+        // add +
+        value = `+${value}`
+        setPhoneNumber(value);
     };
 
     const handleOTPChange = (e) => {
@@ -34,11 +39,11 @@ export default function SignInPage() {
     const handleSendOtp = async () => {
         setLoading(true);
         try {
-            const formattedPhoneNumber = `+${phoneNumber.replace(/\D/g, '')}`;
-            const confirmation = await signInWithPhoneNumber(auth, formattedPhoneNumber, window.recaptchaVerifier)
+            console.log("Sending OTP to", phoneNumber)
+            
+            const confirmation = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
             setConfirmationResult(confirmation);
             setOtpSent(true);
-            setPhoneNumber('');
             alert('OTP has been sent');
         } catch (error) {
             console.error(error)
@@ -82,14 +87,18 @@ export default function SignInPage() {
                     {!otpSent ? (
                         <div>
                             <label htmlFor="phone-number" className="sr-only">Phone Number</label>
-                            <input
-                                id="phone-number"
-                                type="tel"
+                            <PhoneInput
+                                country={'ug'}
                                 value={phoneNumber}
                                 onChange={handlePhoneNumberChange}
-                                placeholder="Enter Phone Number with Country Code"
-                                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                required
+                                inputProps={{
+                                    name: 'phone',
+                                    required: true,
+                                    autoFocus: true
+                                }}
+                                containerClass="w-full"
+                                inputClass="w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 block sm:text-sm"
+                                buttonClass="border border-gray-300 rounded-l-md"
                             />
                         </div>
                     ) : (

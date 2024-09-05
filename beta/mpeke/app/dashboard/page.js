@@ -4,12 +4,16 @@ import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
 import { app } from "../config";
 import { useRouter } from "next/navigation";
 import { socialConnect } from "../utils/socialconnect";
-import useGroupSavings from "../hooks/useGroupSavings";
+
+import GroupSavingsABI from "../contracts/groupManager.abi.json";
 import { ethers } from "ethers";
-import { Button, Card, CardContent, CardHeader, Modal } from '@/components/ui';
+
+import useGroupSavings from "../hooks/useGroupManagement";
+
 import { PlusCircle, DollarSign, Users } from 'lucide-react';
 import CreateGroupModal from './CreateGroupModal';
 import ContributeModal from './ContributeModal';
+
 
 export default function Dashboard() {
     const [user, setUser] = useState(null);
@@ -72,51 +76,43 @@ export default function Dashboard() {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-3xl font-bold">Dashboard</h1>
                     <div>
-                        <Button onClick={handleChainToggle} className="mr-4">
+                        <button onClick={handleChainToggle} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4">
                             {selectedChain === "Celo" ? "Switch to Arbitrum" : "Switch to Celo"}
-                        </Button>
-                        <Button onClick={handleSignOut} variant="destructive">
+                        </button>
+                        <button onClick={handleSignOut} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                             Sign Out
-                        </Button>
+                        </button>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <Card>
-                        <CardHeader>
-                            <h2 className="text-xl font-semibold">User Info</h2>
-                        </CardHeader>
-                        <CardContent>
-                            <p>Phone: {user.phoneNumber}</p>
-                            <p>Wallet: {user.address}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                            <h2 className="text-xl font-semibold">Total Groups</h2>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-4xl font-bold">{savingGroups.length}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                            <h2 className="text-xl font-semibold">Quick Actions</h2>
-                        </CardHeader>
-                        <CardContent>
-                            <Button onClick={() => setIsCreateModalOpen(true)} className="mr-2">
-                                <PlusCircle className="mr-2 h-4 w-4" /> Create Group
-                            </Button>
-                            <Button onClick={() => setIsContributeModalOpen(true)}>
-                                <DollarSign className="mr-2 h-4 w-4" /> Contribute
-                            </Button>
-                        </CardContent>
-                    </Card>
+                    <div className="bg-white shadow-md rounded-lg p-6">
+                        <h2 className="text-xl font-semibold mb-4">User Info</h2>
+                        <p className="mb-2">Phone: {user?.phoneNumber || 'N/A'}</p>
+                        <p>Wallet: {user?.address || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white shadow-md rounded-lg p-6">
+                        <h2 className="text-xl font-semibold mb-4">Total Groups</h2>
+                        <p className="text-4xl font-bold">{savingGroups?.length || 0}</p>
+                    </div>
+                    <div className="bg-white shadow-md rounded-lg p-6">
+                        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+                        <button onClick={() => setIsCreateModalOpen(true)} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2 flex items-center">
+                            <PlusCircle className="mr-2 h-4 w-4" /> Create Group
+                        </button>
+                        <button 
+                            onClick={() => setIsContributeModalOpen(true)} 
+                            className={`bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded flex items-center ${!savingGroups?.length ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={!savingGroups?.length}
+                        >
+                            <DollarSign className="mr-2 h-4 w-4" /> Contribute
+                        </button>
+                    </div>
                 </div>
 
-                <Button onClick={() => router.push('/sacco')} className="mb-6">
+                <button onClick={() => router.push('/sacco')} className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mb-6 flex items-center">
                     <Users className="mr-2 h-4 w-4" /> Manage SACCO Groups
-                </Button>
+                </button>
 
                 <CreateGroupModal
                     isOpen={isCreateModalOpen}
@@ -128,7 +124,7 @@ export default function Dashboard() {
                     isOpen={isContributeModalOpen}
                     onClose={() => setIsContributeModalOpen(false)}
                     onSubmit={contributeToGroup}
-                    groups={savingGroups}
+                    groups={savingGroups || []}
                 />
 
                 {groupError && (
