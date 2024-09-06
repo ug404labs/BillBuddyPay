@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ethers } from 'ethers';
+import { parseUnits } from 'viem';
 
 const CreateGroupModal = ({ isOpen, onClose, onSubmit }) => {
     const [groupForm, setGroupForm] = useState({
@@ -24,8 +24,8 @@ const CreateGroupModal = ({ isOpen, onClose, onSubmit }) => {
             name,
             parseInt(savingType),
             members.split(','),
-            ethers.utils.parseUnits(totalAmount, 6),
-            ethers.utils.parseUnits(contributionAmount, 6),
+            parseUnits(totalAmount, 6),
+            parseUnits(contributionAmount, 6),
             parseInt(rounds),
             parseInt(roundDuration)
         );
