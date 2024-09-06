@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Mpeke - Formally BIllBuddy Pay",
-  description: "Extending Billbuddy Pay to Work with all evm Chains",
+  title: "Block Buddy Pay",
+  description: "Joint Finicing Never been better",
 };
 
 export default function RootLayout({

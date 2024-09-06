@@ -1,20 +1,27 @@
 "use client";
-import LandingPage from "@/app/components/landingPage";
-import React from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { app } from "./config";
-import { useRouter } from "next/navigation";
+import { NextPage } from "next";
 import { useEffect } from "react";
 
-export default function Home() {
-  const router = useRouter();
-  const auth = getAuth(app);
+const Home: NextPage = () => {
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.push("./dashboard");
-      }
-    });
-  }, [auth, router]);
-  return <LandingPage />;
-}
+    const timer = setTimeout(() => {
+      window.location.href = "/login";
+    }, 3000); // Redirect after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-green-100">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4 text-green-600">
+            Welcome to Block Buddy Universe
+          </h1>
+          <p className="text-xl text-gray-700 mb-8">Loading your experience...</p>
+          <div className="w-16 h-16 border-t-4 border-green-500 border-solid rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+  );
+};
+
+export default Home;
