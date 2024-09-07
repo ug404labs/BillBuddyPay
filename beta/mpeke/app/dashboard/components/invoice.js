@@ -1,79 +1,132 @@
-import React, { useState, useEffect } from 'react';
-import { useContract, useAddress, useContractRead, useContractWrite } from "@thirdweb-dev/react";
+"use client";
+//
+
+import React, { useState, useEffect } from "react";
+import { getContract, prepareContractCall, toWei, sendTransaction } from "thirdweb";
+import { useActiveAccount, useReadContract } from "thirdweb/react";
 import FACTORY_ABI from "./factori.abi.json";
-import PAYMENT_SPLITTER_ABI from "./spiltter.abi.json";
+import { defineChain } from "thirdweb/chains";
 
 const FACTORY_ADDRESS = "0x15aaC88A95B997a0b141dB4E17c3a82E7b85d157";
 
 export default function InvoiceManagement() {
-  const address = useAddress();
-  const { contract: factoryContract } = useContract(FACTORY_ADDRESS, FACTORY_ABI);
+  const activeAccount = useActiveAccount();
+  const Alfajores = defineChain({
+    id: 44787,
+    name: "Celo Alfajores",
+    nativeCurrency: { name: "Celo Ether", symbol: "CELO", decimals: 18 },
+    rpc: "https://alfajores-forno.celo-testnet.org",
+    blockExplorers: [
+      {
+        name: "Celo Explorer",
+        url: "https://explorer.celo.org/alfajores",
+        apiUrl: "https://explorer.celo.org/api",
+      },
+    ],
+  });
+  const activeChain = activeAccount?.chain;
+  console.log("Active chain:", activeChain);
+  const factoryContract = getContract({
+    address: FACTORY_ADDRESS,
+    abi: FACTORY_ABI,
+    chain: Alfajores,
+  });
+  console.log("Factory contract:", factoryContract);
+
   const [invoices, setInvoices] = useState([]);
   const [newInvoice, setNewInvoice] = useState({
-    tokenAddress: '',
-    totalAmount: '',
-    recipients: [{ address: '', percentage: '' }],
+    tokenAddress: "0x0000000000000000000000000000000000000000",
+    totalAmount: "",
+    recipients: [{ address: "", percentage: "" }],
   });
 
-  const { data: invoiceCount } = useContractRead(factoryContract, "invoiceCount");
+  // Use useReadContract to get the invoice count
+  const { data: invoiceCount, isLoading: isCountLoading, error: countError } = useReadContract({
+    contract: factoryContract,
+    method: "invoiceCount",
+    params: [],
+    enabled: !!factoryContract,
+  });
+
+  console.log("Invoice count:", invoiceCount);
 
   useEffect(() => {
-    if (factoryContract && invoiceCount) {
-      loadInvoices();
-    }
-  }, [factoryContract, invoiceCount]);
-
-  const loadInvoices = async () => {
-    try {
-      const loadedInvoices = [];
-
-      for (let i = 0; i < invoiceCount.toNumber(); i++) {
-        const { data: invoiceAddress } = await useContractRead(factoryContract, "allInvoices", [i]);
-        const { contract: invoiceContract } = useContract(invoiceAddress, PAYMENT_SPLITTER_ABI);
-        
-        const { data: isPaid } = await useContractRead(invoiceContract, "isPaid");
-        const { data: totalAmount } = await useContractRead(invoiceContract, "totalAmount");
-
-        loadedInvoices.push({
-          address: invoiceAddress,
-          isPaid,
-          totalAmount: totalAmount.toString(),
-        });
+    const loadInvoices = async () => {
+      if (invoiceCount && !isCountLoading && !countError) {
+        const count = Number(invoiceCount);
+        const invoiceAddresses = [];
+        for (let i = 0; i < count; i++) {
+          const { data: invoiceAddress } = await useReadContract({
+            contract: factoryContract,
+            method: "allInvoices",
+            params: [i],
+          });
+          if (invoiceAddress) {
+            invoiceAddresses.push(invoiceAddress);
+          }
+        }
+        setInvoices(invoiceAddresses);
       }
+    };
 
-      setInvoices(loadedInvoices);
-    } catch (error) {
-      console.error("Failed to load invoices:", error);
-    }
-  };
-
-  const { mutateAsync: createInvoice } = useContractWrite(factoryContract, "createInvoice");
+    loadInvoices();
+  }, [invoiceCount, isCountLoading, countError, factoryContract]);
 
   const handleCreateInvoice = async () => {
-    if (!factoryContract) return;
+    if (!factoryContract || !activeAccount) {
+      console.error("Factory contract or active account not available");
+      return;
+    }
 
     try {
-      await createInvoice({
-        args: [
+      const recipientAddresses = newInvoice.recipients.map(r => r.address);
+      const percentages = newInvoice.recipients.map(r => BigInt(parseFloat(r.percentage) * 10000));
+
+      console.log("Preparing transaction with params:", {
+        tokenAddress: newInvoice.tokenAddress,
+        totalAmount: toWei(newInvoice.totalAmount),
+        recipients: recipientAddresses,
+        percentages: percentages,
+      });
+
+      const tx = prepareContractCall({
+        contract: factoryContract,
+        method: "createInvoice",
+        params: [
           newInvoice.tokenAddress,
-          newInvoice.totalAmount,
-          newInvoice.recipients.map(r => r.address),
-          newInvoice.recipients.map(r => r.percentage)
+          toWei(newInvoice.totalAmount),
+          recipientAddresses,
+          percentages,
         ],
       });
 
-      await loadInvoices();
+      console.log("Prepared transaction:", tx);
+
+      const result = await sendTransaction({
+        account: activeAccount,
+        transaction: tx,
+      });
+
+      console.log("Transaction result:", result);
+      await factoryContract.read("invoiceCount");
     } catch (error) {
       console.error("Failed to create invoice:", error);
+      if (error instanceof Error) {
+        console.error("Error message:", error.message);
+        console.error("Error stack:", error.stack);
+      }
     }
   };
 
   const handleAddRecipient = () => {
-    setNewInvoice(prev => ({
+    setNewInvoice((prev) => ({
       ...prev,
-      recipients: [...prev.recipients, { address: '', percentage: '' }],
+      recipients: [...prev.recipients, { address: "", percentage: "" }],
     }));
   };
+
+
+  // 
 
   return (
     <div className="p-4">
@@ -85,14 +138,14 @@ export default function InvoiceManagement() {
           type="text"
           placeholder="Token Address (use 0x0 for native token)"
           value={newInvoice.tokenAddress}
-          onChange={(e) => setNewInvoice(prev => ({ ...prev, tokenAddress: e.target.value }))}
+          onChange={(e) => setNewInvoice((prev) => ({ ...prev, tokenAddress: e.target.value }))}
           className="w-full p-2 mb-2 border rounded"
         />
         <input
           type="text"
           placeholder="Total Amount"
           value={newInvoice.totalAmount}
-          onChange={(e) => setNewInvoice(prev => ({ ...prev, totalAmount: e.target.value }))}
+          onChange={(e) => setNewInvoice((prev) => ({ ...prev, totalAmount: e.target.value }))}
           className="w-full p-2 mb-2 border rounded"
         />
         {newInvoice.recipients.map((recipient, index) => (
@@ -104,47 +157,43 @@ export default function InvoiceManagement() {
               onChange={(e) => {
                 const updatedRecipients = [...newInvoice.recipients];
                 updatedRecipients[index].address = e.target.value;
-                setNewInvoice(prev => ({ ...prev, recipients: updatedRecipients }));
+                setNewInvoice((prev) => ({ ...prev, recipients: updatedRecipients }));
               }}
               className="w-1/2 p-2 mr-2 border rounded"
             />
             <input
               type="text"
-              placeholder="Percentage"
+              placeholder="Percentage (0-100)"
               value={recipient.percentage}
               onChange={(e) => {
                 const updatedRecipients = [...newInvoice.recipients];
                 updatedRecipients[index].percentage = e.target.value;
-                setNewInvoice(prev => ({ ...prev, recipients: updatedRecipients }));
+                setNewInvoice((prev) => ({ ...prev, recipients: updatedRecipients }));
               }}
               className="w-1/2 p-2 border rounded"
             />
           </div>
         ))}
-        <button onClick={handleAddRecipient} className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Add Recipient</button>
-        <button onClick={handleCreateInvoice} className="bg-green-500 text-white px-4 py-2 rounded">Create Invoice</button>
+        <button
+          onClick={handleAddRecipient}
+          className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
+        >
+          Add Recipient
+        </button>
+        <button onClick={handleCreateInvoice} className="bg-green-500 text-white px-4 py-2 rounded">
+          Create Invoice
+        </button>
       </div>
 
       <div>
         <h2 className="text-xl font-semibold mb-2">Existing Invoices</h2>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="border p-2 text-left">Address</th>
-              <th className="border p-2 text-left">Total Amount</th>
-              <th className="border p-2 text-left">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoices.map((invoice, index) => (
-              <tr key={index}>
-                <td className="border p-2">{invoice.address}</td>
-                <td className="border p-2">{invoice.totalAmount} ETH</td>
-                <td className="border p-2">{invoice.isPaid ? 'Paid' : 'Unpaid'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ul className="list-disc pl-5">
+          {invoices.map((invoiceAddress, index) => (
+            <li key={index} className="mb-2">
+              {invoiceAddress}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
