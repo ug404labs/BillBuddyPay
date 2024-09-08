@@ -1,4 +1,12 @@
 // chainDefinitions.js
+import {
+  base,
+  baseSepolia,
+  celo,
+  optimism,
+  optimismSepolia,
+  defineChain,
+} from "thirdweb/chains";
 
 const liskSepolia = defineChain({
   id: 4202,
@@ -7,7 +15,7 @@ const liskSepolia = defineChain({
   rpc: "https://4202.rpc.thirdweb.com",
 });
 
-const Alfajores = defineChain({
+const  Alfajores = defineChain({
   id: 44787,
   name: "Celo Alfajores",
   nativeCurrency: { name: "Celo Ether", symbol: "CELO", decimals: 18 },
