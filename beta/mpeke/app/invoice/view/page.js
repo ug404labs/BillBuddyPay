@@ -1,32 +1,19 @@
-
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useActiveAccount, useReadContract } from "thirdweb/react";
-import { getContract, prepareContractCall, sendAndConfirmTransaction } from "thirdweb";
-import { client } from "../../../lib/client";
-import { baseSepolia } from "thirdweb/chains";
+import { createPublicClient, http } from 'viem';
+import { baseSepolia } from 'viem/chains';
 import Header from "../../header";
-import invoiceFactoryAbi from '../../contracts/invoice/invoiceFactory.abi.json';
-import invoiceAbi from '../../contracts/invoice/invoice.abi.json';
+import QRCode from 'react-qr-code'; // Using react-qr-code library
+import invoiceAbi from "../../contracts/invoice/invoice.abi.json";
 
-const InvoiceViewPage = () => {
+const InvoiceTestPage = () => {
   const searchParams = useSearchParams();
   const invoiceAddress = searchParams.get('address');
-  const connectedAccount = useActiveAccount();
-  const [invoice, setInvoice] = useState(null);
-  const [paymentAmount, setPaymentAmount] = useState('');
+  const [payees, setPayees] = useState([]);
+  const [shares, setShares] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const factoryAddress = '0x7baC6c206C90e73B19844D1dF4507CC33Fd2A5e1';
-
-  const invoiceContrcat = getContract({
-    client,
-    address: invoiceAddress,
-    abi: invoiceAbi,
-    chain: baseSepolia,
-  });
 
   useEffect(() => {
     const fetchInvoiceDetails = async () => {
@@ -37,47 +24,46 @@ const InvoiceViewPage = () => {
       }
 
       try {
-        setLoading(true);
-        setError(null);
-
-        console.log("Fetching invoice details for address:", invoiceAddress);
-
-        const { data: payeesData } = await useReadContract({
-          contract: invoiceContrcat,
-          abi: invoiceAbi,
-          functionName: "getPayees",
+        console.log("Fetching payees data...");
+        const wclient = createPublicClient({
+          chain: baseSepolia,
+          transport: http(),
         });
 
-        const { data: totalShares } = await useReadContract({
-          contract: invoiceContrcat,
+        // Fetch payees data
+        const payeesData = await wclient.readContract({
+          address: invoiceAddress,
           abi: invoiceAbi,
-          functionName: "getTotalShares",
+          functionName: 'getPayees',
         });
+        console.log("Payees Data fetched:", payeesData);
+        setPayees(payeesData);
 
-        if (payeesData && totalShares) {
-          const sharesPromises = payeesData.map(payee => 
-            useReadContract({
-              contract: invoiceContrcat,
-              abi: invoiceAbi,
-              functionName: "getShares",
-              args: [payee],
-            })
-          );
-          const shares = await Promise.all(sharesPromises);
-          
-          setInvoice({
+        // Fetch shares for each payee concurrently using Promise.all
+        const sharePromises = payeesData.map(payee =>
+          wclient.readContract({
             address: invoiceAddress,
-            payees: payeesData,
-            shares: shares,
-            totalShares: totalShares.toString(),
-          });
-        } else {
-          throw new Error("Failed to fetch invoice data");
-        }
-      } catch (error) {
-        console.error("Error fetching invoice details:", error);
-        setError("Failed to load invoice details. Please try again.");
-      } finally {
+            abi: invoiceAbi,
+            functionName: 'getShares',
+            args: [payee],
+          }).then(share => ({ payee, share }))
+          .catch(err => {
+            console.error(`Error fetching shares for ${payee}:`, err);
+            return { payee, share: 'Error' };
+          })
+        );
+
+        const sharesResults = await Promise.all(sharePromises);
+        const sharesData = sharesResults.reduce((acc, { payee, share }) => {
+          acc[payee] = share;
+          return acc;
+        }, {});
+        setShares(sharesData);
+
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching invoice details:", err);
+        setError("Failed to fetch invoice details");
         setLoading(false);
       }
     };
@@ -85,96 +71,79 @@ const InvoiceViewPage = () => {
     fetchInvoiceDetails();
   }, [invoiceAddress]);
 
-  const handlePayment = async (e) => {
-    e.preventDefault();
-    if (!connectedAccount) {
-      alert("Please connect your wallet first.");
-      return;
-    }
-
-    try {
-      const transaction = await prepareContractCall({
-        client,
-        contract: invoiceContrcat,
-        abi: invoiceAbi,
-        method: "receive",
-        value: paymentAmount,
-      });
-
-      const receipt = await sendAndConfirmTransaction({
-        transaction,
-        account: connectedAccount,
-      });
-
-      console.log("Payment successful. Transaction receipt:", receipt);
-      alert("Payment successful!");
-    } catch (error) {
-      console.error("Error making payment:", error);
-      alert("Error making payment: " + error.message);
-    }
-  };
-
-  return (
-    <div className="container mx-auto px-4">
-      <Header />
-      <h1 className="text-2xl font-bold mb-5">Invoice Details</h1>
-      {loading ? (
-        <div className="text-center">
-          <p className="mb-2">Loading invoice details for {invoiceAddress}</p>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-10">
+        <Header />
+        <div className="flex flex-col items-center justify-center h-screen">
+          <div className="text-center mb-4">
+            <p className="text-lg font-semibold mb-2">Loading invoice details for {invoiceAddress}</p>
+            <div className="relative flex items-center justify-center">
+              <div className="absolute animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid"></div>
+              <div className="absolute animate-pulse rounded-full h-24 w-24 bg-blue-100"></div>
+            </div>
+          </div>
         </div>
-      ) : error ? (
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-10">
+        <Header />
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
           <strong className="font-bold">Error: </strong>
           <span className="block sm:inline">{error}</span>
         </div>
-      ) : invoice ? (
-        <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-          <div className="mb-4">
-            <p className="text-gray-700 text-sm font-bold mb-2">Invoice Address:</p>
-            <p className="text-gray-700">{invoice.address}</p>
-          </div>
-          <div className="mb-4">
-            <p className="text-gray-700 text-sm font-bold mb-2">Total Shares:</p>
-            <p className="text-gray-700">{invoice.totalShares}</p>
-          </div>
-          <div className="mb-4">
-            <p className="text-gray-700 text-sm font-bold mb-2">Payees and Shares:</p>
-            <ul>
-              {invoice.payees.map((payee, index) => (
-                <li key={payee} className="text-gray-700">
-                  {payee}: {invoice.shares[index].toString()} shares
-                </li>
-              ))}
-            </ul>
-          </div>
-          <form onSubmit={handlePayment} className="mt-6">
-            <div className="mb-4">
-              <label htmlFor="paymentAmount" className="block text-gray-700 text-sm font-bold mb-2">
-                Payment Amount (in wei):
-              </label>
-              <input
-                type="number"
-                id="paymentAmount"
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              Pay Invoice
-            </button>
-          </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-10">
+      <Header />
+      <div className="relative mb-4">
+        <QRCode value={invoiceAddress || ''} size={128} className="absolute top-4 right-4" />
+      </div>
+      <h1 className="text-2xl font-bold mb-5">Invoice Details</h1>
+      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <div className="mb-4">
+          <p className="text-gray-700 text-sm font-bold mb-2">Invoice Address:</p>
+          <p className="text-gray-700">{invoiceAddress}</p>
         </div>
-      ) : (
-        <p>No invoice data available.</p>
-      )}
+        <div className="mb-4">
+          <p className="text-gray-700 text-sm font-bold mb-2">Payees:</p>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    #
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Payee
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Shares
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {payees.map((payee, index) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{index + 1}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{payee}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{shares[payee] || 'Loading...'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default InvoiceViewPage;
+export default InvoiceTestPage;
