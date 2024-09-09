@@ -2,11 +2,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useActiveAccount } from "thirdweb/react";
-import { prepareContractCall, sendAndConfirmTransaction } from "thirdweb";
-import {base, baseSepolia} from "thirdweb/chains";
-import Web3 from 'web3';
+import { prepareContractCall, sendAndConfirmTransaction, getContract, readContract } from "thirdweb";
+import { client } from "../../../lib/client";
+import { baseSepolia } from "thirdweb/chains";
 import Header from "../../header";
+const invoiceFactoryAddress = '0x7baC6c206C90e73B19844D1dF4507CC33Fd2A5e1'; //base
 import invoiceAbi from '../../contracts/invoice/invoice.abi.json';
+import invoiceFactoryAbi from "../../contracts/invoice/invoiceFactory.abi.json";
 
 const InvoiceViewPage = () => {
   console.log("Rendering InvoiceViewPage");
@@ -20,11 +22,19 @@ const InvoiceViewPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Initialize Web3
-  const HttpProvider =  baseSepolia
-  const web3 = new Web3(new Web3.providers.HttpProvider('https://sepolia.base.org)')); 
-  // Initialize contract
-  const invoiceContract = new web3.eth.Contract(invoiceAbi, invoiceAddress);
+  console.log("Initializing invoice contract");
+  const invoiceContract = getContract({
+    address: invoiceAddress,
+    abi: invoiceAbi,
+    chain: baseSepolia,
+  });
+
+  const invoiceFactoryContract = getContract({
+    address: invoiceFactoryAddress,
+    abi: invoiceFactoryAbi,
+    chain: baseSepolia,
+  })
+  console.log("Invoice Contract:", invoiceContract);
 
   const fetchInvoiceDetails = useCallback(async () => {
     console.log("Fetching invoice details");
@@ -34,69 +44,23 @@ const InvoiceViewPage = () => {
       setLoading(false);
       return;
     }
+    else{
+      //log invoice details
+      
+    }
 
     try {
       console.log("Fetching payees data");
-      const payeesData = await invoiceContract.methods.getPayees().call();
+      const payeesData = await readContract({
+        client,
+        contract: invoiceFactoryContract,
+        method: 'function getInvoiceDetails() view returns (invoice[])',
+        params: [invoiceAddress],
+      });
       console.log("Payees Data:", payeesData);
-
-      console.log("Fetching total shares");
-      const totalShares = await invoiceContract.methods.getTotalShares().call();
-      console.log("Total Shares:", totalShares);
-
-      if (payeesData && totalShares) {
-        console.log("Fetching individual shares");
-        const sharesPromises = payeesData.map(payee => 
-          invoiceContract.methods.getShares(payee).call()
-        );
-        const shares = await Promise.all(sharesPromises);
-        console.log("Individual Shares:", shares);
-        
-        setInvoice({
-          address: invoiceAddress,
-          payees: payeesData,
-          shares: shares,
-          totalShares: totalShares.toString(),
-        });
-      } else {
-        throw new Error("Failed to fetch invoice data");
-      }
-    } catch (error) {
-      console.error("Detailed error:", error);
-      setError("Failed to load invoice details. Please try again.");
-    } finally {
-      setLoading(false);
     }
-  }, [invoiceAddress, invoiceContract.methods]);
+    
 
-  useEffect(() => {
-    console.log("useEffect triggered");
-    fetchInvoiceDetails();
-  }, [fetchInvoiceDetails]);
-
-  const handlePayment = async (e) => {
-    console.log("Handle payment triggered");
-    e.preventDefault();
-    if (!connectedAccount) {
-      console.log("No connected account");
-      alert("Please connect your wallet first.");
-      return;
-    }
-
-    try {
-      console.log("Preparing contract call");
-      const transaction = await prepareContractCall({
-        contract: invoiceContract,
-        method: "receive",
-        value: paymentAmount,
-      });
-      console.log("Transaction prepared:", transaction);
-
-      console.log("Sending and confirming transaction");
-      const receipt = await sendAndConfirmTransaction({
-        transaction,
-        account: connectedAccount,
-      });
 
       console.log("Payment successful. Transaction receipt:", receipt);
       alert("Payment successful!");
@@ -122,6 +86,7 @@ const InvoiceViewPage = () => {
           <span className="block sm:inline">{error}</span>
         </div>
       ) : invoice ? (
+
         <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <div className="mb-4">
             <p className="text-gray-700 text-sm font-bold mb-2">Invoice Address:</p>
