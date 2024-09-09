@@ -7,10 +7,45 @@ import "@openzeppelin/contracts/utils/Address.sol";
 contract InvoiceFactory {
     event InvoiceCreated(address invoiceAddress, address[] payees, uint256[] shares);
 
+    address[] public allInvoices;
+    mapping(address => bool) public isInvoice;
+
     function createInvoice(address[] memory payees, uint256[] memory shares) public returns (address) {
-        Invoice newInvoice = new Invoice(payees, shares);
-        emit InvoiceCreated(address(newInvoice), payees, shares);
-        return address(newInvoice);
+        Invoice newInvoice = (new Invoice){value: 0}(payees, shares);
+        address invoiceAddress = address(newInvoice);
+        allInvoices.push(invoiceAddress);
+        isInvoice[invoiceAddress] = true;
+        emit InvoiceCreated(invoiceAddress, payees, shares);
+        return invoiceAddress;
+    }
+
+    function getAllInvoices() public view returns (address[] memory) {
+        return allInvoices;
+    }
+
+    function getInvoiceDetails(address invoiceAddress) public view returns (address[] memory, uint256[] memory) {
+    require(isInvoice[invoiceAddress], "Not a valid invoice");
+    
+    // Get the payees array from the Invoice contract using staticcall
+    (bool success, bytes memory data) = invoiceAddress.staticcall(abi.encodeWithSignature("getPayees()"));
+    require(success, "Failed to get payees");
+    address[] memory payees = abi.decode(data, (address[]));
+    
+    uint256[] memory shares = new uint256[](payees.length);
+    
+    // For each payee, get their share from the Invoice contract using staticcall
+    for (uint256 i = 0; i < payees.length; i++) {
+        (success, data) = invoiceAddress.staticcall(abi.encodeWithSignature("getShares(address)", payees[i]));
+        require(success, "Failed to get shares");
+        shares[i] = abi.decode(data, (uint256));
+    }
+    
+    return (payees, shares);
+}
+
+
+    function getInvoiceCount() public view returns (uint256) {
+        return allInvoices.length;
     }
 }
 

@@ -16,6 +16,7 @@ import ChainContext from "../Context/chain"; // Import your ChainContext
 
 const Header = () => {
   const [isNetworkDropdownOpen, setIsNetworkDropdownOpen] = useState(false);
+  const [isInvoiceDropdownOpen, setIsInvoiceDropdownOpen] = useState(false); // State for invoice dropdown
   const switchChain = useSwitchActiveWalletChain();
   const { setSelectedChainId } = useContext(ChainContext); // Use the context
 
@@ -70,10 +71,32 @@ const Header = () => {
                   Payment Link
                 </Link>
               </li>
-              <li>
-                <Link href="/invoice" className="hover:text-green-200">
-                  Invoicing
-                </Link>
+              {/* Invoice Dropdown */}
+              <li className="relative">
+                <button
+                  onClick={() =>
+                    setIsInvoiceDropdownOpen(!isInvoiceDropdownOpen)
+                  }
+                  className="hover:text-green-200 focus:outline-none"
+                >
+                  Invoice
+                </button>
+                {isInvoiceDropdownOpen && (
+                  <div className="absolute left-0 mt-2 w-40 bg-white rounded-md shadow-lg py-1 z-10">
+                    <Link
+                      href="/invoice/create-invoice"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Create Invoice
+                    </Link>
+                    <Link
+                      href="/invoice/pay"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Pay Invoice
+                    </Link>
+                  </div>
+                )}
               </li>
               <li>
                 <Link href="/pay" className="hover:text-green-200">
@@ -109,7 +132,6 @@ const Header = () => {
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={() => {
                       switchChain(network.chain);
-                      setSelectedChainId(network.chain.id); // Update the global selected chain ID
                       setIsNetworkDropdownOpen(false);
                     }}
                   >

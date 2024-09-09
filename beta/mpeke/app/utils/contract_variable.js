@@ -13,6 +13,13 @@ const liskSepolia = defineChain({
   name: "Lisk Sepolia",
   nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
   rpc: "https://4202.rpc.thirdweb.com",
+  blockExplorers: [
+    {
+      name: "Etherscan",
+      url: "https://sepolia-blockscout.lisk.com/",
+      apiUrl: "https://sepolia-blockscout.lisk.com/api",
+    },
+  ],
 });
 
 const  Alfajores = defineChain({
