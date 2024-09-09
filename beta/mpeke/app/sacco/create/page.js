@@ -6,7 +6,7 @@ import { getContract, prepareContractCall, sendAndConfirmTransaction, prepareEve
 import { useActiveAccount, useContractEvents } from "thirdweb/react";
 import Header from "../../header";
 import saccoFactoryAbi from '../../contracts/sacco/saccoFactory.abi.json';
-import saccoAbi from '../../contracts/sacco/sacco.abi.json';
+// import saccoAbi from '../../contracts/sacco/sacco.abi.json';
 import { client } from "../../../lib/client";
 import { baseSepolia } from "thirdweb/chains";
 
